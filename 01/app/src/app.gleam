@@ -1,8 +1,9 @@
 import gleam/list
-import gleam/map
+import gleam/map.{Map}
 import gleam/io
 import gleam/result
 import gleam/pair
+import gleam/function
 
 const input = [
   1933,
@@ -207,23 +208,35 @@ const input = [
   1520
 ]
 
-pub fn hello_world() -> String {
-  "Hello, from app!"
+fn make_input_map() {
+  input
+    |> list.map (fn(n) { tuple(n, True) })
+    |> map.from_list
 }
 
 pub fn part1() -> Result(Int, Nil) {
-  let input_map = input
-    |> list.map (fn(n) { tuple(n, True) })
-    |> map.from_list
+  let input_map = make_input_map()
 
-  let res = list.find_map(input, fn(n) {
-    let diff = 2020 - n
-    case map.has_key(input_map, diff) {
-      True -> Ok(tuple(n, diff))
-      False -> Error("No")
-    }
-  })
-
-  res
-    |> result.map(fn(t) { pair.first(t) * pair.second(t) })
+  input
+    |> list.find_map(find_complement(input_map, _))
+    |> result.map(fn(c) { c * {2020 - c} })
 }
+
+fn find_complement(input_map: Map(Int, Bool), n: Int) -> Result(Int, Nil) {
+  let diff = 2020 - n
+
+  case map.has_key(input_map, diff) {
+    True -> Ok(diff)
+    False -> Error(Nil)
+  }
+}
+
+// pub fn part2() {
+
+//   fn first_lookup(n) {
+
+//   }
+
+//   input
+//   |> list.find_map(first_lookup)
+// }
