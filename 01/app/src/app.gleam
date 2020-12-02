@@ -217,26 +217,58 @@ fn make_input_map() {
 pub fn part1() -> Result(Int, Nil) {
   let input_map = make_input_map()
 
-  input
-    |> list.find_map(find_complement(input_map, _))
-    |> result.map(fn(c) { c * {2020 - c} })
+  find_pair_for_total(input_map, 2020)
+    |> result.map(fn(t) { pair.first(t) * pair.second(t) })
 }
 
-fn find_complement(input_map: Map(Int, Bool), n: Int) -> Result(Int, Nil) {
-  let diff = 2020 - n
+fn find_pair_for_total(
+    input_map: Map(Int, Bool),
+    total: Int
+  ) -> Result(tuple(Int, Int), Nil) {
 
-  case map.has_key(input_map, diff) {
-    True -> Ok(diff)
+  input
+    |> list.find_map(check_combination(input_map, total, _))
+    |> result.map(fn(c) { tuple(total - c, c) })
+}
+
+fn check_combination(
+    available_numbers: Map(Int, Bool),
+    sum: Int,
+    num: Int
+  ) -> Result(Int, Nil) {
+
+  let diff = sum - num
+
+  case map.has_key(available_numbers, num) {
+    True -> {
+      case map.has_key(available_numbers, diff) {
+        True -> Ok(diff)
+        False -> Error(Nil)
+      }
+    }
     False -> Error(Nil)
   }
+
 }
 
-// pub fn part2() {
+pub fn part2_tuple() {
+  let available_numbers = make_input_map()
 
-//   fn first_lookup(n) {
+  input
+  |> list.find_map(fn(n) {
+    let diff = 2020 - n
 
-//   }
+    find_pair_for_total(available_numbers, diff)
+      |> result.map(fn(t) {
+        tuple(n, pair.first(t), pair.second(t))
+      })
+  })
+}
 
-//   input
-//   |> list.find_map(first_lookup)
-// }
+pub fn part2() {
+  part2_tuple()
+  |> result.map(fn(t) { 
+    let tuple(a, b, c) = t
+    a * b * c
+  })
+}
