@@ -13,8 +13,8 @@ const input = "data/input.txt"
 
 type Policy{
   Policy(
-    min: Int,
-    max: Int,
+    first_pos: Int,
+    second_pos: Int,
     char: String,
   )
 }
@@ -68,17 +68,20 @@ fn check_password(t: tuple(Policy, String)) -> Bool {
   let tuple(policy, password) = t
   let char = policy.char
 
-  let count = password
+  let chars = password
     |> string.to_graphemes
-    |> list.map(fn(c) {
-      case c == char {
-        True -> 1
-        False -> 0
-      }
-    })
-    |> sum
 
-  { count >= policy.min } && { count <= policy.max }
+  let first = list.at(chars, policy.first_pos - 1)
+  let second = list.at(chars, policy.second_pos - 1)
+
+  let first_ok = first == Ok(char)
+  let second_ok = second == Ok(char)
+
+  case first_ok, second_ok {
+    True, False -> True
+    False, True -> True
+    _, _ -> False
+  }
 }
 
 fn check_passwords(collection: List(tuple(Policy, String))) -> List(Bool) {
