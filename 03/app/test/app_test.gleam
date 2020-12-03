@@ -17,7 +17,7 @@ pub fn space_at_test() {
   |> should.equal(app.Tree)
 }
 
-pub fn hello_world_test() {
-  app.hello_world()
+pub fn main_test() {
+  app.main()
   |> should.equal("Hello, from app!")
 }
