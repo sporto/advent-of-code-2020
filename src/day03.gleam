@@ -3,13 +3,7 @@ import gleam/list
 import gleam/string
 import gleam/io
 import gleam/pair
-import gleam/dynamic.{Dynamic}
-
-external fn read_file(name: String) -> Result(String, Dynamic) =
-  "file" "read_file"
-
-external fn rem(Int, Int) -> Int =
-  "erlang" "rem"
+import utils
 
 const input = "data/03/input.txt"
 
@@ -20,18 +14,6 @@ const slopes = [
     tuple(7,1),
     tuple(1,2),
   ]
-
-fn split_lines(file) {
-  string.split(file, "\n")
-}
-
-fn sum(col: List(Int)) -> Int {
-  list.fold(over: col, from: 0, with: fn(n, t) { n + t } )
-}
-
-fn multiply(col: List(Int)) -> Int {
-  list.fold(over: col, from: 1, with: fn(n, t) { n * t } )
-}
 
 pub type Space{
   Empty
@@ -55,7 +37,7 @@ fn parse_line(line: String) -> Result(List(Space), Nil) {
 
 pub fn space_at(line, x) -> Space {
   let len = list.length(line)
-  let pos = rem(x, len)
+  let pos = utils.rem(x, len)
 
   list.at(line, pos) |> result.unwrap(Empty)
 }
@@ -90,12 +72,12 @@ fn one_if_tree(space: Space) -> Int {
 fn trees_for_slope(lines, slope) {
   walk_from(lines, slope, [],0,0)
   |> list.map(one_if_tree)
-  |> sum
+  |> utils.sum
 }
 
 fn get_matrix() {
-  read_file(input)
-  |> result.map(split_lines)
+  utils.read_file(input)
+  |> result.map(utils.split_lines)
   |> result.unwrap([])
   |> list.map(parse_line)
   |> result.all
@@ -107,7 +89,7 @@ pub fn main() -> Int {
 
   let res = slopes
   |> list.map(trees_for_slope(lines, _))
-  |> multiply
+  |> utils.multiply
 
   res
 }

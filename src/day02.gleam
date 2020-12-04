@@ -4,10 +4,7 @@ import gleam/result
 import gleam/bool
 import gleam/list
 import gleam/int
-import gleam/dynamic.{Dynamic}
-
-external fn read_file(name: String) -> Result(String, Dynamic) =
-  "file" "read_file"
+import utils
 
 const input = "data/02/input.txt"
 
@@ -17,10 +14,6 @@ type Policy{
     second_pos: Int,
     char: String,
   )
-}
-
-fn split_lines(file) {
-  string.split(file, "\n")
 }
 
 // "1-3 b"
@@ -60,10 +53,6 @@ fn parse_policies_and_passwords(collection: List(String)) -> Result(List(tuple(P
   |> result.all
 }
 
-fn sum(col: List(Int)) -> Int {
-  list.fold(over: col, from: 0, with: fn(n, t) { n + t } )
-}
-
 fn check_password(t: tuple(Policy, String)) -> Bool {
   let tuple(policy, password) = t
   let char = policy.char
@@ -92,12 +81,12 @@ fn check_passwords(collection: List(tuple(Policy, String))) -> List(Bool) {
 fn count_valid(collection: List(Bool)) -> Int {
   collection
   |> list.map(bool.to_int)
-  |> sum
+  |> utils.sum
 }
 
 pub fn main() -> Result(Int, Nil) {
-  read_file(input)
-  |> result.map(split_lines)
+  utils.read_file(input)
+  |> result.map(utils.split_lines)
   |> result.map_error(fn(e) { Nil })
   |> result.then(parse_policies_and_passwords)
   |> result.map(check_passwords)
