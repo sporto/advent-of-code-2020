@@ -1,0 +1,2 @@
+[*.gleam]
+indent_style = tab
