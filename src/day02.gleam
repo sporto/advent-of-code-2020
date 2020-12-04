@@ -9,7 +9,7 @@ import gleam/dynamic.{Dynamic}
 external fn read_file(name: String) -> Result(String, Dynamic) =
   "file" "read_file"
 
-const input = "data/input.txt"
+const input = "data/02/input.txt"
 
 type Policy{
   Policy(
@@ -95,14 +95,11 @@ fn count_valid(collection: List(Bool)) -> Int {
   |> sum
 }
 
-pub fn hello_world() -> String {
+pub fn main() -> Result(Int, Nil) {
   read_file(input)
   |> result.map(split_lines)
   |> result.map_error(fn(e) { Nil })
   |> result.then(parse_policies_and_passwords)
   |> result.map(check_passwords)
   |> result.map(count_valid)
-  |> io.debug
-
-  "Hello, from app!"
 }

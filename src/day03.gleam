@@ -11,7 +11,7 @@ external fn read_file(name: String) -> Result(String, Dynamic) =
 external fn rem(Int, Int) -> Int =
   "erlang" "rem"
 
-const input = "data/input.txt"
+const input = "data/03/input.txt"
 
 const slopes = [
     tuple(1,1),
@@ -102,14 +102,12 @@ fn get_matrix() {
   |> result.unwrap([])
 }
 
-pub fn main() -> String {
+pub fn main() -> Int {
   let lines = get_matrix()
 
   let res = slopes
   |> list.map(trees_for_slope(lines, _))
   |> multiply
 
-  io.debug(res)
-
-  "Hello"
+  res
 }
