@@ -24,3 +24,20 @@ pub fn multiply(col: List(Int)) -> Int {
 pub fn max(col: List(Int)) -> Int {
 	list.fold(over: col, from: 0, with: int.max)
 }
+
+pub fn try_fold(
+		over collection: List(a),
+		from accumulator: b,
+		with fun: fn(a, b) -> Result(b, b),
+	) -> b {
+
+		case collection {
+			[] -> accumulator
+			[ first, ..rest ] ->
+				case fun(first, accumulator) {
+					Ok(next_accumulator) ->
+						try_fold(rest, next_accumulator, fun)
+					Error(b) -> b
+				}
+		}
+}

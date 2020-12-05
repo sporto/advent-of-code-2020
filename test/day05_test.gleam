@@ -63,5 +63,5 @@ pub fn seat_id_test() {
 }
 
 pub fn main_test() {
-	day05.main() |> should.equal(1)
+	day05.main() |> should.equal(Ok(731))
 }

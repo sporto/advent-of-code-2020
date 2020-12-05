@@ -89,23 +89,18 @@ pub fn part1(file: String) {
 	|> io.debug
 }
 
-fn find_missing_next(prev, col_) {
-	case col_ {
-		[] -> prev
-		[ first, ..rest] -> {
-			case prev {
-				0 -> find_missing_next(first, rest)
-				_ -> case first == prev + 1 {
-					True -> find_missing_next(first, rest)
-					False -> prev + 1
-				}
+fn find_missing(col: List(Int)) {
+	let folder = fn(n, prev) {
+		case prev {
+			0 -> Ok(n)
+			_ -> case n == prev + 1 {
+				True -> Ok(n)
+				False -> Error(prev + 1)
 			}
 		}
 	}
-}
 
-fn find_missing(col: List(Int)) {
-	find_missing_next(0, col)
+	utils.try_fold(over: col, from: 0, with: folder)
 }
 
 pub fn part2(file: String) {
@@ -120,6 +115,4 @@ pub fn part2(file: String) {
 pub fn main() {
 	utils.read_file(input)
 	|> result.map(part2)
-
-	0
 }
