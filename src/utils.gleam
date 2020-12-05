@@ -1,6 +1,7 @@
 import gleam/list
 import gleam/dynamic.{Dynamic}
 import gleam/string
+import gleam/int
 
 pub external fn read_file(name: String) -> Result(String, Dynamic) =
   "file" "read_file"
@@ -18,4 +19,8 @@ pub fn sum(col: List(Int)) -> Int {
 
 pub fn multiply(col: List(Int)) -> Int {
   list.fold(over: col, from: 1, with: fn(n, t) { n * t } )
+}
+
+pub fn max(col: List(Int)) -> Int {
+	list.fold(over: col, from: 0, with: int.max)
 }

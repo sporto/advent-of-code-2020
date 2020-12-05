@@ -1,2 +1,2 @@
-test:
-	rebar3 eunit --module=day04_test
+day05:
+	rebar3 eunit --module=day05_test
