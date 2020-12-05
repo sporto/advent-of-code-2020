@@ -2,6 +2,7 @@ import gleam/io
 import gleam/list
 import gleam/result
 import gleam/string
+import gleam/int
 import utils
 
 pub type Side{
@@ -80,7 +81,7 @@ pub fn seat_id(sequence: String) {
 
 const input = "data/05/input.txt"
 
-pub fn process(file: String) {
+pub fn part1(file: String) {
 	file
 	|> utils.split_lines
 	|> list.map(seat_id)
@@ -88,9 +89,37 @@ pub fn process(file: String) {
 	|> io.debug
 }
 
+fn find_missing_next(prev, col_) {
+	case col_ {
+		[] -> prev
+		[ first, ..rest] -> {
+			case prev {
+				0 -> find_missing_next(first, rest)
+				_ -> case first == prev + 1 {
+					True -> find_missing_next(first, rest)
+					False -> prev + 1
+				}
+			}
+		}
+	}
+}
+
+fn find_missing(col: List(Int)) {
+	find_missing_next(0, col)
+}
+
+pub fn part2(file: String) {
+	file
+	|> utils.split_lines
+	|> list.map(seat_id)
+	|> list.sort(int.compare)
+	|> find_missing
+	|> io.debug
+}
+
 pub fn main() {
 	utils.read_file(input)
-	|> result.map(process)
+	|> result.map(part2)
 
 	0
 }
