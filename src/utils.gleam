@@ -13,6 +13,11 @@ pub fn split_lines(file) {
   string.split(file, "\n")
 }
 
+pub fn split_groups(file: String) -> List(String) {
+	string.split(file, "\n\n")
+}
+
+
 pub fn sum(col: List(Int)) -> Int {
   list.fold(over: col, from: 0, with: fn(n, t) { n + t } )
 }
