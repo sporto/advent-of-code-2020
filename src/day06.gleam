@@ -14,14 +14,22 @@ fn person_input(answers: String) -> Set(String)  {
 }
 
 fn count_group(group: String) -> Int {
-	group
+	let inputs = group
 	|> utils.split_lines
 	|> list.map(person_input)
-	|> list.fold(from: set.new(), with: set.union)
-	|> set.size
+
+	case inputs {
+		[] -> 0
+		[ a ] -> set.size(a)
+		[ a, ..rest ] -> {
+			rest
+			|> list.fold(from: a, with: set.intersection)
+			|> set.size
+		}
+	}
 }
 
-fn part1(file: String) {
+fn part2(file: String) {
 	file
 	|> utils.split_groups
 	|> list.map(count_group)
@@ -30,5 +38,5 @@ fn part1(file: String) {
 
 pub fn main() {
 	utils.read_file(input)
-	|> result.map(part1)
+	|> result.map(part2)
 }
