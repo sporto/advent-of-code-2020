@@ -100,20 +100,20 @@ fn reverse_map(map_: Map(String, List(String))) -> Map(String, List(String)) {
 	)
 }
 
-pub fn make_lookup_map(file: String) {
+pub fn make_reverse_lookup_map(file: String) {
 	make_content_list(file)
 	|> list.map(drop_qty)
 	|> map.from_list
 	|> reverse_map
 }
 
-fn follow(lookup_map, name) -> List(String) {
+fn follow_ancestors(lookup_map, name) -> List(String) {
 	case map.get(lookup_map, name) {
 		Error(_) -> []
 		Ok(containers) ->
 			{
 				let ancestors = containers
-					|> list.map(follow(lookup_map, _))
+					|> list.map(follow_ancestors(lookup_map, _))
 					|> list.flatten
 
 				list.append(containers, ancestors)
@@ -121,15 +121,38 @@ fn follow(lookup_map, name) -> List(String) {
 	}
 }
 
+fn count_bags(lookup_map, name) -> Int {
+	case map.get(lookup_map, name) {
+		Error(_) -> 0
+		Ok(children) -> {
+			let count = children
+				|> list.map(fn(tu) {
+					pair.first(tu) * count_bags(lookup_map, pair.second(tu))
+				})
+				|> utils.sum
+
+			1 + count
+		}
+	}
+}
+
 pub fn part1(file: String) {
-	make_lookup_map(file)
-	|> follow("shiny gold")
+	make_reverse_lookup_map(file)
+	|> follow_ancestors("shiny gold")
 	|> set.from_list
 	|> set.size
 	|> io.debug
 }
 
+pub fn part2(file: String) {
+	make_content_list(file)
+	|> map.from_list
+	|> count_bags("shiny gold")
+	|> fn(n) { n - 1 }
+	|> io.debug
+}
+
 pub fn main() {
 	utils.read_file(input)
-	|> result.map(part1)
+	|> result.map(part2)
 }

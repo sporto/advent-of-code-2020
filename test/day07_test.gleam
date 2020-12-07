@@ -52,5 +52,5 @@ pub fn parse_line_test() {
 
 pub fn main_test() {
 	day07.main()
-	|> should.equal(Ok(265))
+	|> should.equal(Ok(14177))
 }
