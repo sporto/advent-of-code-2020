@@ -1,4 +1,3 @@
-
 import day07
 import gleam/should
 

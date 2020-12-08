@@ -6,3 +6,6 @@ day06:
 
 day07:
 	rebar3 eunit --module=day07_test
+
+day08:
+	rebar3 eunit --module=day08_test
