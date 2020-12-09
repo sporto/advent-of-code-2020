@@ -26,6 +26,10 @@ pub fn multiply(col: List(Int)) -> Int {
   list.fold(over: col, from: 1, with: fn(n, t) { n * t } )
 }
 
+pub fn min(col: List(Int)) -> Int {
+	list.fold(over: col, from: 1_000_000_000_000, with: int.min)
+}
+
 pub fn max(col: List(Int)) -> Int {
 	list.fold(over: col, from: 0, with: int.max)
 }

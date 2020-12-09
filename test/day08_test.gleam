@@ -1,4 +1,4 @@
-import day08.{Outcome, Halted, Terminated}
+import day08.{Halted, Terminated}
 import gleam/should
 
 pub fn main_test() {
