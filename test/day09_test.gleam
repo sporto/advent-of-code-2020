@@ -8,5 +8,5 @@ pub fn part1_test() {
 
 pub fn part2_test() {
 	day09.part2()
-	|> should.equal(Ok(1))
+	|> should.equal(Ok(4794981))
 }
