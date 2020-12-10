@@ -1,3 +1,6 @@
+utils:
+	rebar3 eunit --module=utils_test
+
 day05:
 	rebar3 eunit --module=day05_test
 
