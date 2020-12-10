@@ -16,3 +16,8 @@ pub fn part1_main_test() {
 	day10.part1_main()
 	|> should.equal(Ok(2100))
 }
+
+pub fn part2_sample1_test() {
+	day10.part2_sample1()
+	|> should.equal(Ok([[0]]))
+}
