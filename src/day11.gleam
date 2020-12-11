@@ -1,8 +1,10 @@
 import utils
+import gleam/bool
+import gleam/function
+import gleam/io
+import gleam/list
 import gleam/result
 import gleam/string
-import gleam/list
-import gleam/function
 
 const sample1 = "data/11/sample1.txt"
 
@@ -64,7 +66,7 @@ fn mutate_cell(grid grid, row_ix row_ix, col_ix col_ix, cell cell) {
 			True -> Taken
 			False -> Empty
 		}
-		Taken -> case occupied_adjacent >  4 {
+		Taken -> case occupied_adjacent >=  4 {
 			True -> Empty
 			False -> Taken
 		}
@@ -104,17 +106,38 @@ fn mutate(grid) {
 	})
 }
 
+fn mutate_until_stable(grid, round) {
+	let mutated = mutate(grid)
+
+	// io.debug(round + 1)
+	// io.debug(mutated |> to_printable)
+
+	case mutated == grid {
+		True -> grid
+		False -> mutate_until_stable(mutated, round + 1)
+	}
+}
+
 fn to_printable(grid) {
 	grid
 	|> list.map(list.map(_, serialize_cell))
 	|> list.map(string.join(_, ""))
+}
 
+fn count_taken_places(grid) {
+	grid
+	|> list.map(
+		list.map(_, is_taken)
+	)
+	|> list.flatten
+	|> list.map(bool.to_int)
+	|> utils.sum
 }
 
 fn part1(grid) {
 	grid
-	|> mutate
-	|> to_printable
+	|> mutate_until_stable(0)
+	|> count_taken_places
 }
 
 pub fn part1_sample1() {

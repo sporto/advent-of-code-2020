@@ -4,5 +4,5 @@ import gleam/map
 
 pub fn part1_sample1_test() {
 	day11.part1_sample1()
-	|> should.equal(Ok([]))
+	|> should.equal(Ok(37))
 }
