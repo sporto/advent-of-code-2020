@@ -19,5 +19,15 @@ pub fn part1_main_test() {
 
 pub fn part2_sample1_test() {
 	day10.part2_sample1()
-	|> should.equal(Ok([[0]]))
+	|> should.equal(Ok(8))
+}
+
+pub fn part2_sample2_test() {
+	day10.part2_sample2()
+	|> should.equal(Ok(19208))
+}
+
+pub fn part2_main_test() {
+	day10.part2_main()
+	|> should.equal(Ok(16198260678656))
 }
