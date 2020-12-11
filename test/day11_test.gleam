@@ -9,9 +9,10 @@ pub fn part1_sample1_test() {
 }
 
 
+// This timesout
 // pub fn part1_main_test() {
 // 	day11.part1_main()
-// 	|> should.equal(Ok(37))
+// 	|> should.equal(Ok(2441))
 // }
 
 // pub fn a_test() {

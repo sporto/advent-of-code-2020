@@ -48,3 +48,6 @@ day19:
 
 day20:
 	rebar3 eunit --module=day20_test
+
+repl:
+	rebar3 shell
