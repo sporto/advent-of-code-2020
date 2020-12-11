@@ -66,16 +66,41 @@ fn part1_mutate_cell(
 	) {
 
 	let adjacent = get_adjacent(grid, row_ix, col_ix)
-	let occupied_adjacent = adjacent
+	let occupied_count = adjacent
 		|> list.filter(is_taken)
 		|> list.length
 
 	case cell {
-		Empty -> case occupied_adjacent == 0 {
+		Empty -> case occupied_count == 0 {
 			True -> Taken
 			False -> Empty
 		}
-		Taken -> case occupied_adjacent >=  4 {
+		Taken -> case occupied_count >=  4 {
+			True -> Empty
+			False -> Taken
+		}
+		Floor -> Floor
+	}
+}
+
+fn part2_mutate_cell(
+		grid grid: Grid,
+		row_ix row_ix: Int,
+		col_ix col_ix: Int,
+		cell cell: Cell
+	) {
+
+	let visible_seats = get_visible_seats(grid, row_ix, col_ix)
+	let occupied_count = visible_seats
+		|> list.filter(is_taken)
+		|> list.length
+
+	case cell {
+		Empty -> case occupied_count == 0 {
+			True -> Taken
+			False -> Empty
+		}
+		Taken -> case occupied_count >=  5 {
 			True -> Empty
 			False -> Taken
 		}
@@ -95,6 +120,36 @@ fn get_adjacent(grid grid, row_ix row_ix, col_ix col_ix) {
 		get(grid, row_ix + 1, col_ix + 1),
 	]
 	|> list.filter_map(function.identity)
+}
+
+fn get_visible_seats(grid grid, row_ix row_ix, col_ix col_ix) {
+	[
+		search_visible(grid, row_ix, col_ix, -1, -1),
+		search_visible(grid, row_ix, col_ix, -1, 0),
+		search_visible(grid, row_ix, col_ix, -1, 1),
+		search_visible(grid, row_ix, col_ix, 0, -1),
+		search_visible(grid, row_ix, col_ix, 0, 1),
+		search_visible(grid, row_ix, col_ix, 1, -1),
+		search_visible(grid, row_ix, col_ix, 1, 0),
+		search_visible(grid, row_ix, col_ix, 1, 1),
+	]
+	|> list.filter_map(function.identity)
+}
+
+fn search_visible(grid, from_row_ix, from_col_ix, move_row, move_col) {
+	let next_row = from_row_ix + move_row
+	let next_col = from_col_ix + move_col
+
+	case get(grid, next_row, next_col) {
+		Ok(cell) -> {
+			case cell {
+				Taken -> Ok(Taken)
+				Empty -> Ok(Empty)
+				Floor -> search_visible(grid, next_row, next_col, move_row, move_col)
+			}
+		}
+		Error(Nil) -> Error(Nil)
+	}
 }
 
 fn get(grid grid, row_ix row_ix, col_ix col_ix) -> Result(Cell, Nil) {
@@ -166,4 +221,20 @@ pub fn part1_sample1() {
 pub fn part1_main() {
 	read_input(input)
 	|> result.map(part1)
+}
+
+fn part2(grid) {
+	grid
+	|> mutate_until_stable(0, part2_mutate_cell)
+	|> count_taken_places
+}
+
+pub fn part2_sample1() {
+	read_input(sample1)
+	|> result.map(part2)
+}
+
+pub fn part2_main() {
+	read_input(input)
+	|> result.map(part2)
 }

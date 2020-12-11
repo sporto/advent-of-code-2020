@@ -20,3 +20,14 @@ pub fn part1_sample1_test() {
 
 // 	1 |> should.equal(2)
 // }
+
+pub fn part2_sample1_test() {
+	day11.part2_sample1()
+	|> should.equal(Ok(26))
+}
+
+// This timesout
+// pub fn part1_main_test() {
+// 	day11.part2_main()
+// 	|> should.equal(Ok(2190))
+// }
