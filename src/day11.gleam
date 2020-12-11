@@ -9,11 +9,13 @@ import gleam/string
 const sample1 = "data/11/sample1.txt"
 const input = "data/11/input.txt"
 
-pub type Place{
+pub type Cell{
 	Floor
 	Empty
 	Taken
 }
+
+type Grid = List(List(Cell))
 
 fn is_taken(place) {
 	place == Taken
@@ -43,7 +45,7 @@ fn parse_row(row) {
 	|> result.all
 }
 
-fn parse_grid(lines) -> Result(List(List(Place)), Nil) {
+fn parse_grid(lines) -> Result(Grid, Nil) {
 	lines
 	|> list.map(parse_row)
 	|> result.all
@@ -56,7 +58,13 @@ fn read_input(file) {
 	|> result.then(parse_grid)
 }
 
-fn mutate_cell(grid grid, row_ix row_ix, col_ix col_ix, cell cell) {
+fn part1_mutate_cell(
+		grid grid: Grid,
+		row_ix row_ix: Int,
+		col_ix col_ix: Int,
+		cell cell: Cell
+	) {
+
 	let adjacent = get_adjacent(grid, row_ix, col_ix)
 	let occupied_adjacent = adjacent
 		|> list.filter(is_taken)
@@ -89,33 +97,42 @@ fn get_adjacent(grid grid, row_ix row_ix, col_ix col_ix) {
 	|> list.filter_map(function.identity)
 }
 
-fn get(grid grid, row_ix row_ix, col_ix col_ix) -> Result(Place, Nil) {
+fn get(grid grid, row_ix row_ix, col_ix col_ix) -> Result(Cell, Nil) {
 	try row = list.at(grid, row_ix)
 	list.at(row, col_ix)
 }
 
-fn mutate(grid) {
+fn mutate_grid(
+		grid: Grid,
+		mutate_cell: fn(Grid, Int, Int, Cell) -> Cell
+	) -> Grid {
+
 	list.index_map(grid, fn(row_ix, row) {
 		list.index_map(row, fn(col_ix, cell) {
 			mutate_cell(
-				grid: grid,
-				row_ix: row_ix,
-				col_ix: col_ix,
-				cell: cell
+				grid,
+				row_ix,
+				col_ix,
+				cell
 			)
 		})
 	})
 }
 
-fn mutate_until_stable(grid, round) {
-	let mutated = mutate(grid)
+fn mutate_until_stable(
+		grid: Grid,
+		round: Int,
+		mutate_cell: fn(Grid, Int, Int, Cell) -> Cell
+	) {
+
+	let mutated = mutate_grid(grid, mutate_cell)
 
 	// io.debug(round + 1)
 	// io.debug(mutated |> to_printable)
 
 	case mutated == grid {
 		True -> grid
-		False -> mutate_until_stable(mutated, round + 1)
+		False -> mutate_until_stable(mutated, round + 1, mutate_cell)
 	}
 }
 
@@ -137,7 +154,7 @@ fn count_taken_places(grid) {
 
 fn part1(grid) {
 	grid
-	|> mutate_until_stable(0)
+	|> mutate_until_stable(0, part1_mutate_cell)
 	|> count_taken_places
 }
 
