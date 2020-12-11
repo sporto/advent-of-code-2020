@@ -17,6 +17,10 @@ pub type Cell{
 
 type Grid = List(List(Cell))
 
+type Coor{
+	Coor(row: Int, col: Int)
+}
+
 fn is_taken(place) {
 	place == Taken
 }
@@ -60,12 +64,11 @@ fn read_input(file) {
 
 fn part1_mutate_cell(
 		grid grid: Grid,
-		row_ix row_ix: Int,
-		col_ix col_ix: Int,
+		coor coor: Coor,
 		cell cell: Cell
 	) {
 
-	let adjacent = get_adjacent(grid, row_ix, col_ix)
+	let adjacent = get_adjacent(grid, coor)
 	let occupied_count = adjacent
 		|> list.filter(is_taken)
 		|> list.length
@@ -85,12 +88,11 @@ fn part1_mutate_cell(
 
 fn part2_mutate_cell(
 		grid grid: Grid,
-		row_ix row_ix: Int,
-		col_ix col_ix: Int,
+		coor: Coor,
 		cell cell: Cell
 	) {
 
-	let visible_seats = get_visible_seats(grid, row_ix, col_ix)
+	let visible_seats = get_visible_seats(grid, coor)
 	let occupied_count = visible_seats
 		|> list.filter(is_taken)
 		|> list.length
@@ -108,66 +110,72 @@ fn part2_mutate_cell(
 	}
 }
 
-fn get_adjacent(grid grid, row_ix row_ix, col_ix col_ix) {
+fn get_adjacent(grid grid, coor) {
 	[
-		get(grid, row_ix - 1, col_ix - 1),
-		get(grid, row_ix - 1, col_ix),
-		get(grid, row_ix - 1, col_ix + 1),
-		get(grid, row_ix, col_ix - 1),
-		get(grid, row_ix, col_ix + 1),
-		get(grid, row_ix + 1, col_ix - 1),
-		get(grid, row_ix + 1, col_ix),
-		get(grid, row_ix + 1, col_ix + 1),
+		get(grid, move_coor(coor, -1, -1) ),
+		get(grid, move_coor(coor, -1, 0) ),
+		get(grid, move_coor(coor, -1, 1) ),
+		get(grid, move_coor(coor, 0, -1) ),
+		get(grid, move_coor(coor, 0, 1) ),
+		get(grid, move_coor(coor, 1, -1) ),
+		get(grid, move_coor(coor, 1, 0) ),
+		get(grid, move_coor(coor, 1, 1) ),
 	]
 	|> list.filter_map(function.identity)
 }
 
-fn get_visible_seats(grid grid, row_ix row_ix, col_ix col_ix) {
+fn get_visible_seats(grid grid: Grid, coor: Coor) {
 	[
-		search_visible(grid, row_ix, col_ix, -1, -1),
-		search_visible(grid, row_ix, col_ix, -1, 0),
-		search_visible(grid, row_ix, col_ix, -1, 1),
-		search_visible(grid, row_ix, col_ix, 0, -1),
-		search_visible(grid, row_ix, col_ix, 0, 1),
-		search_visible(grid, row_ix, col_ix, 1, -1),
-		search_visible(grid, row_ix, col_ix, 1, 0),
-		search_visible(grid, row_ix, col_ix, 1, 1),
+		search_visible(grid, coor, -1, -1),
+		search_visible(grid, coor, -1, 0),
+		search_visible(grid, coor, -1, 1),
+		search_visible(grid, coor, 0, -1),
+		search_visible(grid, coor, 0, 1),
+		search_visible(grid, coor, 1, -1),
+		search_visible(grid, coor, 1, 0),
+		search_visible(grid, coor, 1, 1),
 	]
 	|> list.filter_map(function.identity)
 }
 
-fn search_visible(grid, from_row_ix, from_col_ix, move_row, move_col) {
-	let next_row = from_row_ix + move_row
-	let next_col = from_col_ix + move_col
+fn search_visible(grid, from_coor, move_row, move_col) {
+	let next_coor = move_coor(from_coor, move_row, move_col)
 
-	case get(grid, next_row, next_col) {
+	case get(grid, next_coor) {
 		Ok(cell) -> {
 			case cell {
 				Taken -> Ok(Taken)
 				Empty -> Ok(Empty)
-				Floor -> search_visible(grid, next_row, next_col, move_row, move_col)
+				Floor -> search_visible(grid, next_coor, move_row, move_col)
 			}
 		}
 		Error(Nil) -> Error(Nil)
 	}
 }
 
-fn get(grid grid, row_ix row_ix, col_ix col_ix) -> Result(Cell, Nil) {
-	try row = list.at(grid, row_ix)
-	list.at(row, col_ix)
+fn move_coor(coor, move_row, move_col) {
+	Coor(
+		row: coor.row + move_row,
+		col: coor.col + move_col,
+	)
+}
+
+fn get(grid grid, coor) -> Result(Cell, Nil) {
+	try row = list.at(grid, coor.row)
+	list.at(row, coor.col)
 }
 
 fn mutate_grid(
 		grid: Grid,
-		mutate_cell: fn(Grid, Int, Int, Cell) -> Cell
+		mutate_cell: fn(Grid, Coor, Cell) -> Cell
 	) -> Grid {
 
 	list.index_map(grid, fn(row_ix, row) {
 		list.index_map(row, fn(col_ix, cell) {
+			let coor = Coor(row_ix, col_ix)
 			mutate_cell(
 				grid,
-				row_ix,
-				col_ix,
+				coor,
 				cell
 			)
 		})
@@ -177,7 +185,7 @@ fn mutate_grid(
 fn mutate_until_stable(
 		grid: Grid,
 		round: Int,
-		mutate_cell: fn(Grid, Int, Int, Cell) -> Cell
+		mutate_cell: fn(Grid, Coor, Cell) -> Cell
 	) {
 
 	let mutated = mutate_grid(grid, mutate_cell)
