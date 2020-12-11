@@ -7,6 +7,7 @@ import gleam/result
 import gleam/string
 
 const sample1 = "data/11/sample1.txt"
+const input = "data/11/input.txt"
 
 pub type Place{
 	Floor
@@ -142,5 +143,10 @@ fn part1(grid) {
 
 pub fn part1_sample1() {
 	read_input(sample1)
+	|> result.map(part1)
+}
+
+pub fn part1_main() {
+	read_input(input)
 	|> result.map(part1)
 }
