@@ -10,18 +10,13 @@ const sample1 = "data/10/sample1.txt"
 const sample2 = "data/10/sample2.txt"
 const input = "data/10/input.txt"
 
-fn parse_lines(lines) {
-	lines
-	|> list.map(int.parse)
-	|> result.all
+fn parse(s: String) -> Result(Int, String) {
+	int.parse(s)
 	|> utils.replace_error("Could not parse")
 }
 
-fn read_input(file) {
-	utils.read_file(file)
-	|> utils.replace_error("Could not read file")
-	|> result.map(utils.split_lines)
-	|> result.then(parse_lines)
+fn read_input(file: String) -> Result(List(Int), String) {
+	utils.get_input_lines(file, parse)
 }
 
 fn diff(t) {

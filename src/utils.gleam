@@ -19,6 +19,19 @@ pub fn split_groups(file: String) -> List(String) {
 	string.split(file, "\n\n")
 }
 
+pub fn get_input_lines(
+		file_name: String,
+		parse_line: fn(String) -> Result(a, String)
+	) -> Result(List(a), String) {
+
+	try file = read_file(file_name)
+		|> replace_error("Could not read file")
+
+	file
+	|> split_lines
+	|> list.map(parse_line)
+	|> result.all
+}
 
 pub fn sum(col: List(Int)) -> Int {
   list.fold(over: col, from: 0, with: fn(n, t) { n + t } )
@@ -55,7 +68,10 @@ pub fn try_fold(
 		}
 }
 
-pub fn replace_error(res, error) {
+pub fn replace_error(
+		res: Result(a, b), error: c
+	) -> Result(a, c)  {
+
 	res
 	|> result.map_error(fn(_) { error })
 }
