@@ -8,6 +8,7 @@ import gleam/result
 import gleam/string
 
 const sample1 = "data/12/sample1.txt"
+const input = "data/12/input.txt"
 
 pub type Ship{
 	Ship(
@@ -61,7 +62,7 @@ fn part1(ins) {
 		from: initial,
 		with: step
 	)
-	// |> io.debug
+	|> io.debug
 	|> manhattan_distance
 }
 
@@ -73,12 +74,8 @@ fn step(ins: Ins, ship: Ship) {
 		S(val) -> Ship(..ship, y: ship.y - val)
 		E(val) -> Ship(..ship, x: ship.x + val)
 		W(val) -> Ship(..ship, x: ship.x - val)
-		L(val) -> Ship(..ship,
-			bearing: utils.rem(ship.bearing - val, 360)
-		)
-		R(val) -> Ship(..ship,
-			bearing: utils.rem(ship.bearing + val, 360)
-		)
+		L(val) -> bear_ship(ship, val * -1)
+		R(val) -> bear_ship(ship, val)
 		F(val) -> {
 			case ship.bearing {
 				0 -> step(N(val), ship)
@@ -91,11 +88,24 @@ fn step(ins: Ins, ship: Ship) {
 	}
 }
 
+fn bear_ship(ship: Ship, d: Int) {
+	Ship(..ship, bearing: bear(ship.bearing, d))
+}
+
+pub fn bear(bearing: Int, degrees: Int) {
+	utils.rem(bearing + degrees + 360, 360)
+}
+
 fn manhattan_distance(ship) {
 	utils.abs(ship.x) + utils.abs(ship.y)
 }
 
 pub fn part1_sample1() {
 	read_input(sample1)
+	|> result.map(part1)
+}
+
+pub fn part1_main() {
+	read_input(input)
 	|> result.map(part1)
 }
