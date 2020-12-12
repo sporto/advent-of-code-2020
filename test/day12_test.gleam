@@ -29,3 +29,30 @@ pub fn part1_test() {
 	day12.part1_main()
 	|> should.equal(Ok(1710))
 }
+
+pub fn rotate_vector_test() {
+	day12.rotate_vector(4, 2, 90)
+	|> should.equal(tuple(2, -4))
+
+	day12.rotate_vector(4, -2, 90)
+	|> should.equal(tuple(-2, -4))
+
+	day12.rotate_vector(4, 2, 180)
+	|> should.equal(tuple(-4, -2))
+
+	day12.rotate_vector(4, 2, 270)
+	|> should.equal(tuple(-2, 4))
+
+	day12.rotate_vector(4, 2, -90)
+	|> should.equal(tuple(-2, 4))
+}
+
+// pub fn part2_sample_test() {
+// 	day12.part2_sample()
+// 	|> should.equal(Ok(286))
+// }
+
+pub fn part2_main_test() {
+	day12.part2_main()
+	|> should.equal(Ok(62045))
+}

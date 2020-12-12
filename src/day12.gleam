@@ -6,6 +6,7 @@ import gleam/list
 import gleam/int
 import gleam/result
 import gleam/string
+import gleam/pair
 
 const sample1 = "data/12/sample1.txt"
 const input = "data/12/input.txt"
@@ -16,6 +17,10 @@ pub type Ship{
 		x: Int,
 		y: Int,
 	)
+}
+
+pub type Waypoint{
+	Waypoint(x: Int, y: Int)
 }
 
 pub type Ins{
@@ -60,13 +65,13 @@ fn part1(ins) {
 	list.fold(
 		over: ins,
 		from: initial,
-		with: step
+		with: part1_step
 	)
 	|> io.debug
 	|> manhattan_distance
 }
 
-fn step(ins: Ins, ship: Ship) {
+fn part1_step(ins: Ins, ship: Ship) {
 	// io.debug(ship)
 	// io.debug(ins)
 	case ins {
@@ -78,13 +83,85 @@ fn step(ins: Ins, ship: Ship) {
 		R(val) -> bear_ship(ship, val)
 		F(val) -> {
 			case ship.bearing {
-				0 -> step(N(val), ship)
-				90 -> step(E(val), ship)
-				180 -> step(S(val), ship)
-				270 -> step(W(val), ship)
+				0 -> part1_step(N(val), ship)
+				90 -> part1_step(E(val), ship)
+				180 -> part1_step(S(val), ship)
+				270 -> part1_step(W(val), ship)
 				_ -> ship
 			}
 		}
+	}
+}
+
+fn part2(ins) {
+	let ship = Ship(
+		bearing: 90,
+		x: 0,
+		y: 0
+	)
+
+	let waypoint = Waypoint(
+		x: 10,
+		y: 1,
+	)
+
+	list.fold(
+		over: ins,
+		from: tuple(ship, waypoint),
+		with: part2_step
+	)
+	|> io.debug
+	|> pair.first
+	|> manhattan_distance
+}
+
+fn part2_step(ins: Ins, t: tuple(Ship, Waypoint)) {
+	// io.debug(t)
+	// io.debug(ins)
+
+	let tuple(ship, wp) = t
+
+	case ins {
+		N(val) ->
+			tuple(ship, Waypoint(..wp, y: wp.y + val))
+		S(val) ->
+			tuple(ship, Waypoint(..wp, y: wp.y - val))
+		E(val) ->
+			tuple(ship, Waypoint(..wp, x: wp.x + val))
+		W(val) ->
+			tuple(ship, Waypoint(..wp, x: wp.x - val))
+		L(val) ->
+			tuple(
+				ship,
+				rotate_waypoint(wp, val * -1)
+			)
+		R(val) ->
+			tuple(
+				ship,
+				rotate_waypoint(wp, val)
+			)
+		F(val) ->
+			tuple(
+				Ship(..ship,
+					x: ship.x + wp.x * val,
+					y: ship.y + wp.y * val
+				),
+				wp
+			)
+	}
+}
+
+fn rotate_waypoint(wp, val) {
+	let tuple(x, y) = rotate_vector(wp.x, wp.y, val)
+	Waypoint(x: x, y: y)
+}
+
+pub fn rotate_vector(x, y, degrees) {
+	case bear(0, degrees) {
+		90 -> tuple(y, x * -1)
+		180 -> tuple(x * -1, y * -1)
+		270 -> tuple(y * -1, x)
+		_ -> tuple(x, y)
 	}
 }
 
@@ -108,4 +185,14 @@ pub fn part1_sample1() {
 pub fn part1_main() {
 	read_input(input)
 	|> result.map(part1)
+}
+
+pub fn part2_sample() {
+	read_input(sample1)
+	|> result.map(part2)
+}
+
+pub fn part2_main() {
+	read_input(input)
+	|> result.map(part2)
 }
