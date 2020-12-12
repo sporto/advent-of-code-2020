@@ -33,6 +33,15 @@ pub fn get_input_lines(
 	|> result.all
 }
 
+///
+
+pub fn abs(num) {
+	case num >= 0 {
+		True -> num
+		False -> num * -1
+	}
+}
+
 pub fn sum(col: List(Int)) -> Int {
   list.fold(over: col, from: 0, with: fn(n, t) { n + t } )
 }

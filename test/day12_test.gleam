@@ -5,5 +5,5 @@ import gleam/io
 
 pub fn part1_sample1_test() {
 	day12.part1_sample1()
-	|> should.equal(Ok([]))
+	|> should.equal(Ok(25))
 }

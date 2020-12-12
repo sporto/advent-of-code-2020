@@ -9,6 +9,14 @@ import gleam/string
 
 const sample1 = "data/12/sample1.txt"
 
+pub type Ship{
+	Ship(
+		bearing: Int,
+		x: Int,
+		y: Int,
+	)
+}
+
 pub type Ins{
 	N(Int)
 	S(Int)
@@ -41,7 +49,53 @@ fn parse_line(line) -> Result(Ins, String) {
 	}
 }
 
+fn part1(ins) {
+	let initial = Ship(
+		bearing: 90,
+		x: 0,
+		y: 0
+	)
+
+	list.fold(
+		over: ins,
+		from: initial,
+		with: step
+	)
+	// |> io.debug
+	|> manhattan_distance
+}
+
+fn step(ins: Ins, ship: Ship) {
+	// io.debug(ship)
+	// io.debug(ins)
+	case ins {
+		N(val) -> Ship(..ship, y: ship.y + val)
+		S(val) -> Ship(..ship, y: ship.y - val)
+		E(val) -> Ship(..ship, x: ship.x + val)
+		W(val) -> Ship(..ship, x: ship.x - val)
+		L(val) -> Ship(..ship,
+			bearing: utils.rem(ship.bearing - val, 360)
+		)
+		R(val) -> Ship(..ship,
+			bearing: utils.rem(ship.bearing + val, 360)
+		)
+		F(val) -> {
+			case ship.bearing {
+				0 -> step(N(val), ship)
+				90 -> step(E(val), ship)
+				180 -> step(S(val), ship)
+				270 -> step(W(val), ship)
+				_ -> ship
+			}
+		}
+	}
+}
+
+fn manhattan_distance(ship) {
+	utils.abs(ship.x) + utils.abs(ship.y)
+}
+
 pub fn part1_sample1() {
 	read_input(sample1)
-	// |> result.map(part1)
+	|> result.map(part1)
 }
