@@ -47,10 +47,10 @@ pub fn rotate_vector_test() {
 	|> should.equal(tuple(-2, 4))
 }
 
-// pub fn part2_sample_test() {
-// 	day12.part2_sample()
-// 	|> should.equal(Ok(286))
-// }
+pub fn part2_sample_test() {
+	day12.part2_sample()
+	|> should.equal(Ok(286))
+}
 
 pub fn part2_main_test() {
 	day12.part2_main()

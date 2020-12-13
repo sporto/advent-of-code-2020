@@ -114,3 +114,7 @@ pub fn count(collection) {
 		with: folder
 	)
 }
+
+pub fn is_divisor_of(number num, divisor divisor) {
+	rem(num, divisor) == 0
+}

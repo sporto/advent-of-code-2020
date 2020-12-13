@@ -21,3 +21,17 @@ pub fn count_test() {
 		|> map.from_list
 	)
 }
+
+pub fn is_divisor_of_test() {
+	utils.is_divisor_of(5, 5)
+	|> should.be_true
+
+	utils.is_divisor_of(10, 5)
+	|> should.be_true
+
+	utils.is_divisor_of(150, 5)
+	|> should.be_true
+
+	utils.is_divisor_of(944, 59)
+	|> should.be_true
+}
