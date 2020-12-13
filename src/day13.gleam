@@ -46,10 +46,16 @@ pub fn part2(earliest, input) {
 	part2_find_time(earliest, buses)
 }
 
-fn part2_parse_buses(input: String) -> List(Option(Int)) {
+fn part2_parse_buses(input: String) -> List(tuple(Int,Int)) {
 	input
 	|> string.split(",")
-	|> list.map(function.compose(int.parse, option.from_result))
+	|> list.index_map(fn(ix, e) { tuple(ix, e) })
+	|> list.filter_map(fn(t) {
+		case int.parse(pair.second(t)) {
+			Ok(num) -> Ok(tuple(pair.first(t), num))
+			Error(_) -> Error(Nil)
+		}
+	})
 }
 
 fn part2_find_time(time: Int, buses) {
@@ -62,20 +68,17 @@ fn part2_find_time(time: Int, buses) {
 fn check_departures(time, buses) {
 	case buses {
 		[] -> True
-		[ first, ..rest ] -> {
-			case bus_can_depart(time, first) {
-				True -> check_departures(time + 1, rest)
+		[ bus, ..rest ] -> {
+			case bus_can_depart(time + pair.first(bus), pair.second(bus)) {
+				True -> check_departures(time, rest)
 				False -> False
 			}
 		}
 	}
 }
 
-fn bus_can_depart(time, maybe_bus) {
-	case maybe_bus {
-		None -> True
-		Some(bus) -> utils.is_divisor_of(time, bus)
-	}
+fn bus_can_depart(time, bus) {
+	utils.is_divisor_of(time, bus)
 }
 
 pub fn part1_sample() {
