@@ -53,20 +53,28 @@ fn part2_parse_buses(input: String) -> List(Option(Int)) {
 }
 
 fn part2_find_time(time: Int, buses) {
-	let res = buses
-		|> list.index_map(fn(ix, bus) { can_depart(time, ix, bus) })
-		|> list.all(function.identity)
-
-	case res {
+	case check_departures(time, buses) {
 		True -> time
 		False -> part2_find_time(time +1, buses)
 	}
 }
 
-fn can_depart(time, ix, maybe_bus) {
+fn check_departures(time, buses) {
+	case buses {
+		[] -> True
+		[ first, ..rest ] -> {
+			case bus_can_depart(time, first) {
+				True -> check_departures(time + 1, rest)
+				False -> False
+			}
+		}
+	}
+}
+
+fn bus_can_depart(time, maybe_bus) {
 	case maybe_bus {
 		None -> True
-		Some(bus) -> utils.is_divisor_of(time + ix, bus)
+		Some(bus) -> utils.is_divisor_of(time, bus)
 	}
 }
 
