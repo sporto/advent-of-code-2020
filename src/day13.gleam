@@ -56,6 +56,11 @@ fn part2_parse_buses(input: String) -> List(tuple(Int,Int)) {
 			Error(_) -> Error(Nil)
 		}
 	})
+	|> list.sort(fn(a, b) {
+		int.compare(pair.second(a), pair.second(b))
+	})
+	|> list.reverse
+	|> io.debug
 }
 
 fn part2_find_time(time: Int, buses) {
