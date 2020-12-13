@@ -1,9 +1,11 @@
-import gleam/pair
-import gleam/string
+import gleam/function
 import gleam/int
-import gleam/list
-import gleam/result
 import gleam/io
+import gleam/list
+import gleam/pair
+import gleam/result
+import gleam/string
+import gleam/option.{Option, Some, None}
 import utils
 
 const sample = tuple(
@@ -18,26 +20,53 @@ const input = tuple(
 
 fn part1(t) {
 	let initial_time = pair.first(t)
-	let buses = parse_buses(pair.second(t))
-	let tuple(bus, bus_time) = find_bus(initial_time, buses)
-	bus * {bus_time - initial_time}
+	let buses = part1_parse_buses(pair.second(t))
+	let tuple(bus, bus_time) = part1_find_bus(initial_time, buses)
+	bus * { bus_time - initial_time }
 }
 
-fn parse_buses(input: String) -> List(Int) {
+fn part1_parse_buses(input: String) -> List(Int) {
 	input
 	|> string.split(",")
 	|> list.filter_map(int.parse)
 }
 
-fn find_bus(time: Int, buses: List(Int)) {
+fn part1_find_bus(time: Int, buses: List(Int)) {
 	let maybe_bus = buses |> list.find(utils.is_divisor_of(time, _))
-
-	// io.debug(time)
-	// io.debug(maybe_bus)
 
 	case maybe_bus {
 		Ok(bus) -> tuple(bus, time)
-		Error(_) -> find_bus(time + 1, buses)
+		Error(_) -> part1_find_bus(time + 1, buses)
+	}
+}
+
+pub fn part2(earliest, input) {
+	let buses = part2_parse_buses(input)
+
+	part2_find_time(earliest, buses)
+}
+
+fn part2_parse_buses(input: String) -> List(Option(Int)) {
+	input
+	|> string.split(",")
+	|> list.map(function.compose(int.parse, option.from_result))
+}
+
+fn part2_find_time(time: Int, buses) {
+	let res = buses
+		|> list.index_map(fn(ix, bus) { can_depart(time, ix, bus) })
+		|> list.all(function.identity)
+
+	case res {
+		True -> time
+		False -> part2_find_time(time +1, buses)
+	}
+}
+
+fn can_depart(time, ix, maybe_bus) {
+	case maybe_bus {
+		None -> True
+		Some(bus) -> utils.is_divisor_of(time + ix, bus)
 	}
 }
 
@@ -47,4 +76,12 @@ pub fn part1_sample() {
 
 pub fn part1_main() {
 	part1(input)
+}
+
+pub fn part2_sample() {
+	part2(0, "7,13,x,x,59,x,31,19")
+}
+
+pub fn part2_main() {
+	part2(100_000_000_000_000, pair.second(input))
 }
