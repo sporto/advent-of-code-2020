@@ -4,6 +4,7 @@ import gleam/string
 import gleam/int
 import gleam/result
 import gleam/map
+import gleam/bool
 
 pub external fn read_file(name: String) -> Result(String, Dynamic) =
   "file" "read_file"
@@ -151,4 +152,29 @@ pub fn to_binary_string(num: Int) -> String {
 		}
 	})
 	|> string.join("")
+}
+
+fn from_binary_(total: Int, bin: List(Bool)) -> Int {
+	case bin {
+		[] -> total
+		[first, ..rest] -> from_binary_(total * 2 + bool.to_int(first), rest)
+	}
+}
+
+pub fn from_binary(bin: List(Bool)) -> Int {
+	from_binary_(0, bin)
+}
+
+pub fn from_binary_string(bin: String) -> Int {
+	bin
+	|> string.to_graphemes
+	|> list.filter_map(int.parse)
+	|> list.filter_map(fn(n) {
+		case n {
+			0 -> Ok(False)
+			1 -> Ok(True)
+			_ -> Error(Nil)
+		}
+	})
+	|> from_binary
 }

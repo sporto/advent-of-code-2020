@@ -103,11 +103,11 @@ fn part1_step(ins, state) {
 		Mask(mask) ->
 			State(..state, mask: mask)
 		Mem(slot, value) ->
-			State(..state, mem: set_mem(state.mem, state.mask, slot, value))
+			State(..state, mem: set_memory(state.mem, state.mask, slot, value))
 	}
 }
 
-fn set_mem(memory, mask, slot, value) {
+fn set_memory(memory, mask, slot, value) {
 	map.insert(
 		into: memory,
 		for: slot,

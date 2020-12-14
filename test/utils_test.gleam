@@ -43,3 +43,11 @@ pub fn to_binary_test() {
 	utils.to_binary_string(1584)
 	|> should.equal("11000110000")
 }
+
+pub fn from_binary_test() {
+	utils.from_binary([True,False,True,True])
+	|> should.equal(11)
+
+	utils.from_binary_string("11000110000")
+	|> should.equal(1584)
+}
