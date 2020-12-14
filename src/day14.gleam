@@ -4,6 +4,7 @@ import gleam/result
 import gleam/string
 import gleam/int
 import gleam/pair
+import gleam/io
 import gleam/map.{Map}
 
 const sample = "data/14/sample.txt"
@@ -95,10 +96,14 @@ fn part1(input) {
 		with: part1_step
 	)
 
-	final.mask
+	final.mem
+	|> map.values
+	|> utils.sum
 }
 
 fn part1_step(ins, state) {
+	// io.debug(ins)
+	// io.debug(state.mem)
 	case ins {
 		Mask(mask) ->
 			State(..state, mask: mask)
@@ -117,8 +122,13 @@ fn set_memory(memory, mask, slot, value) {
 
 fn masked_value(mask, value) {
 	let expanded = utils.to_binary(value)
+	let expanded_len = list.length(expanded)
+	let mask_len = list.length(mask)
+	let diff = mask_len - expanded_len
+	let fill = list.repeat(False, diff)
+	let expanded_filled = list.append(fill, expanded)
 
-	list.zip(mask, expanded)
+	list.zip(mask, expanded_filled)
 	|> list.map(fn(t) {
 		case pair.first(t) {
 			Same -> pair.second(t)
@@ -126,14 +136,15 @@ fn masked_value(mask, value) {
 			One -> True
 		}
 	})
-	|> from_binary
-}
-
-fn from_binary(bin: List(Bool)) -> Int {
-	0
+	|> utils.from_binary
 }
 
 pub fn part1_sample() {
 	read_input(sample)
+	|> result.map(part1)
+}
+
+pub fn part1_main() {
+	read_input(input)
 	|> result.map(part1)
 }

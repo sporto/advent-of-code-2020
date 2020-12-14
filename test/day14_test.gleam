@@ -5,5 +5,10 @@ import gleam/map
 
 pub fn part1_sample_test() {
 	day14.part1_sample()
-	|> should.equal(Ok([]))
+	|> should.equal(Ok(165))
+}
+
+pub fn part1_main_test() {
+	day14.part1_main()
+	|> should.equal(Ok(165))
 }
