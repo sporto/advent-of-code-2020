@@ -118,3 +118,37 @@ pub fn count(collection) {
 pub fn is_divisor_of(number num, divisor divisor) {
 	rem(num, divisor) == 0
 }
+
+fn to_binary_(num: Int, acc: List(Bool)) -> List(Bool) {
+	case num == 0 {
+		True -> acc
+		False -> {
+			let quotient = num / 2
+			let remainder = rem(num, 2)
+			let bit = case remainder {
+				0 -> False
+				_ -> True
+			}
+
+			to_binary_(
+				quotient,
+				list.append([ bit ], acc)
+			)
+		}
+	}
+}
+
+pub fn to_binary(num: Int) -> List(Bool) {
+	to_binary_(num, [])
+}
+
+pub fn to_binary_string(num: Int) -> String {
+	to_binary(num)
+	|> list.map(fn(v) {
+		case v {
+			True -> "1"
+			False -> "0"
+		}
+	})
+	|> string.join("")
+}

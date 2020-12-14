@@ -35,3 +35,11 @@ pub fn is_divisor_of_test() {
 	utils.is_divisor_of(944, 59)
 	|> should.be_true
 }
+
+pub fn to_binary_test() {
+	utils.to_binary_string(12)
+	|> should.equal("1100")
+
+	utils.to_binary_string(1584)
+	|> should.equal("11000110000")
+}
