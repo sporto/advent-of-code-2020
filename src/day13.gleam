@@ -99,5 +99,7 @@ pub fn part2_sample() {
 }
 
 pub fn part2_main() {
-	part2(100_000_000_000_000, pair.second(input))
+	// let min = 100_000_000_000_000
+	let min = 756_261_495_958_000
+	part2(min, pair.second(input))
 }

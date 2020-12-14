@@ -35,7 +35,7 @@ pub fn part2_test() {
 }
 
 // too slow
-// pub fn part2_main_test() {
-// 	day13.part2_main()
-// 	|> should.equal(1068781)
-// }
+pub fn part2_main_test() {
+	day13.part2_main()
+	|> should.equal(756261495958122)
+}
