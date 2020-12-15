@@ -9,10 +9,10 @@ type State{
 	State(turn: Int, last_spoken: Int, acc: Map(Int, List(Int)))
 }
 
-pub fn part1(input) {
+pub fn main(limit, input) {
 	let final_state = input
 	|> make_initial_map
-	|> part1_turn
+	|> turn(limit, _)
 
 	final_state.last_spoken
 }
@@ -34,10 +34,10 @@ fn make_initial_map(input) -> State {
 	State(turn: turn, last_spoken: last_spoken, acc: acc)
 }
 
-fn part1_turn(state: State) -> State {
+fn turn(limit, state: State) -> State {
 	let this_turn = state.turn + 1
 	// io.debug(state)
-	case state.turn >= 2020 {
+	case state.turn >= limit {
 		True ->
 			state
 		False -> {
@@ -66,7 +66,7 @@ fn part1_turn(state: State) -> State {
 				acc: next_acc
 			)
 
-			part1_turn(next_state)
+			turn(limit, next_state)
 		}
 	}
 }
