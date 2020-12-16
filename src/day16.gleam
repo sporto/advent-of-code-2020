@@ -5,12 +5,16 @@ import gleam/result
 import gleam/string
 import gleam/io
 
-const tickets = "data/16/tickets.txt"
-const sample_tickets = "data/16/tickets-sample.txt"
+const part1_rules_sample =  "data/16/part1-rules-sample.txt"
+const part2_rules_sample =  "data/16/part2-rules-sample.txt"
+const part1_sample_tickets = "data/16/part1-tickets-sample.txt"
+const part2_sample_tickets = "data/16/part2-tickets-sample.txt"
 const rules =  "data/16/rules.txt"
-const rules_sample =  "data/16/rules-sample.txt"
-const sample_ticket = [7,1,14]
-const ticket = [181,131,61,67,151,59,113,101,79,53,71,193,179,103,149,157,127,97,73,191]
+const tickets = "data/16/tickets.txt"
+
+const part2_sample_ticket = [11,12,13]
+// const sample_ticket = [7,1,14]
+// const ticket = [181,131,61,67,151,59,113,101,79,53,71,193,179,103,149,157,127,97,73,191]
 
 pub type Rule{
 	Rule(
@@ -25,11 +29,19 @@ pub type Range{
 }
 
 pub fn part1_sample() {
-	part1(sample_tickets, rules_sample)
+	part1(part1_sample_tickets, part1_rules_sample)
 }
 
 pub fn part1_main() {
 	part1(tickets, rules)
+}
+
+pub fn part2_sample() {
+	part2(
+		part2_sample_tickets,
+		part2_rules_sample,
+		part2_sample_ticket
+	)
 }
 
 fn part1(tickets_input, rules_input) {
@@ -43,7 +55,7 @@ fn part1(tickets_input, rules_input) {
 	Ok(sum)
 }
 
-fn part1_validate_ticket(rules, ticket) {
+fn part1_validate_ticket(rules, ticket) -> Int {
 	ticket
 	|> list.map(part1_validate_field(rules, _))
 	|> utils.sum
@@ -102,5 +114,22 @@ fn parse_range(input) {
 			Ok(Range(min, max))
 		}
 		_ -> Error("Invalid range")
+	}
+}
+
+fn part2(tickets_input, rules_input, ticket) {
+	try tickets = utils.get_input_lines(tickets_input, parse_ticket)
+	try rules = utils.get_input_lines(rules_input, parse_rule)
+
+	let valid_tickets = tickets
+	|> list.filter(is_valid_ticket(rules, _))
+
+	Ok(valid_tickets)
+}
+
+fn is_valid_ticket(rules, ticket) {
+	case part1_validate_ticket(rules, ticket) {
+		0 -> True
+		_ -> False
 	}
 }
