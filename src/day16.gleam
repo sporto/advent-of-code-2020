@@ -4,6 +4,7 @@ import gleam/list
 import gleam/result
 import gleam/string
 import gleam/io
+import gleam/function
 
 const part1_rules_sample =  "data/16/part1-rules-sample.txt"
 const part2_rules_sample =  "data/16/part2-rules-sample.txt"
@@ -23,6 +24,8 @@ pub type Rule{
 		range2: Range,
 	)
 }
+
+pub type RuleSet = List(Rule)
 
 pub type Range{
 	Range(min: Int, max: Int)
@@ -124,6 +127,17 @@ fn part2(tickets_input, rules_input, ticket) {
 	let valid_tickets = tickets
 	|> list.filter(is_valid_ticket(rules, _))
 
+	let rule_permutations = utils.permutations(rules)
+
+	rule_permutations
+	|> list.find_map(fn(permutation) {
+		case test_tickets(permutation, valid_tickets) {
+			True -> Ok(permutation)
+			False -> Error(Nil)
+		}
+	})
+	|> io.debug
+
 	Ok(valid_tickets)
 }
 
@@ -132,4 +146,20 @@ fn is_valid_ticket(rules, ticket) {
 		0 -> True
 		_ -> False
 	}
+}
+
+fn test_tickets(rules: RuleSet, tickets) -> Bool {
+	tickets
+	|> list.map(test_ticket(_, rules))
+	|> list.all(function.identity)
+}
+
+fn test_ticket(ticket, rules: RuleSet) -> Bool {
+	// each field in the ticket must be valid for the corresponding rule
+	list.zip(rules, ticket)
+	|> list.map(fn(t) {
+		let tuple(rule, field) = t
+		part1_validate_field_rule(field, rule)
+	})
+	|> list.all(function.identity)
 }
