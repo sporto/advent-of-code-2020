@@ -178,3 +178,23 @@ pub fn from_binary_string(bin: String) -> Int {
 	})
 	|> from_binary
 }
+
+pub fn permutations(l: List(a)) -> List(List(a)) {
+	case l {
+		[] -> [[]]
+		_ -> {
+			// For each value in the list
+			list.map(l, fn(x) {
+				// Make a sub list without the current value x
+				list.filter(l, fn(y) { y != x })
+				// Get the permutations for this sub list
+				|> permutations
+				// Add the x value at the begging of each sub list
+				|> list.map(list.append([x], _))
+
+			})
+			// Return a List(List(a))
+			|> list.flatten
+		}
+	}
+}

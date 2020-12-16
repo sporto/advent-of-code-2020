@@ -51,3 +51,13 @@ pub fn from_binary_test() {
 	utils.from_binary_string("11000110000")
 	|> should.equal(1584)
 }
+
+pub fn permutations_test() {
+	utils.permutations([1,2])
+	|> should.equal([[1,2], [2,1]])
+
+	let expected = [[1, 2, 3], [1, 3, 2], [2, 1, 3], [2, 3, 1], [3, 1, 2], [3, 2, 1]]
+
+	utils.permutations([1, 2, 3])
+	|> should.equal(expected)
+}
