@@ -4,6 +4,7 @@ import gleam/list
 import gleam/result
 import gleam/string
 import gleam/io
+import gleam/pair
 import gleam/function
 
 const part1_rules_sample =  "data/16/part1-rules-sample.txt"
@@ -15,7 +16,7 @@ const tickets = "data/16/tickets.txt"
 
 const part2_sample_ticket = [11,12,13]
 // const sample_ticket = [7,1,14]
-// const ticket = [181,131,61,67,151,59,113,101,79,53,71,193,179,103,149,157,127,97,73,191]
+const main_ticket = [181,131,61,67,151,59,113,101,79,53,71,193,179,103,149,157,127,97,73,191]
 
 pub type Rule{
 	Rule(
@@ -26,6 +27,8 @@ pub type Rule{
 }
 
 pub type RuleSet = List(Rule)
+
+pub type Ticket = List(Int)
 
 pub type Range{
 	Range(min: Int, max: Int)
@@ -44,6 +47,14 @@ pub fn part2_sample() {
 		part2_sample_tickets,
 		part2_rules_sample,
 		part2_sample_ticket
+	)
+}
+
+pub fn part2_main() {
+	part2(
+		tickets,
+		rules,
+		main_ticket
 	)
 }
 
@@ -120,7 +131,7 @@ fn parse_range(input) {
 	}
 }
 
-fn part2(tickets_input, rules_input, ticket) {
+fn part2(tickets_input: String, rules_input: String, ticket: Ticket) {
 	try tickets = utils.get_input_lines(tickets_input, parse_ticket)
 	try rules = utils.get_input_lines(rules_input, parse_rule)
 
@@ -129,12 +140,18 @@ fn part2(tickets_input, rules_input, ticket) {
 
 	let rule_permutations = utils.permutations(rules)
 
-	rule_permutations
+	try valid_permutation = rule_permutations
 	|> list.find_map(fn(permutation) {
 		case test_tickets(permutation, valid_tickets) {
 			True -> Ok(permutation)
 			False -> Error(Nil)
 		}
+	})
+	|> utils.replace_error("Could not find valid permutation")
+
+	list.zip(valid_permutation, ticket)
+	|> list.map(fn(t) {
+		tuple(pair.first(t), pair.second(t))
 	})
 	|> io.debug
 
