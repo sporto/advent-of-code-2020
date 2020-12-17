@@ -202,7 +202,7 @@ fn part2(tickets_input: String, rules_input: String, ticket: Ticket) {
 			})
 	})
 
-	possible_rules_per_index
+	let field_indexes = possible_rules_per_index
 	|> map.to_list
 	|> list.sort(fn(a, b) {
 		int.compare(pair.second(a) |> list.length, pair.second(b) |> list.length)
@@ -230,8 +230,24 @@ fn part2(tickets_input: String, rules_input: String, ticket: Ticket) {
 			}
 		}
 	)
-	|> io.debug
+
+	let ticket_fields = map.fold(
+		over: field_indexes,
+		from: map.new(),
+		with: fn(key, field_name, acc) {
+			case list.at(main_ticket, key) {
+				Ok(value) -> map.insert(acc, field_name, value)
+				Error(_) -> acc
+			}
+		}
+	)
+
+	let product = map.filter(ticket_fields, fn(key, value) {
+		string.starts_with(key, "departure")
+	})
+	|> map.values
+	|> utils.multiply
 
 
-	Ok([0])
+	Ok(product)
 }

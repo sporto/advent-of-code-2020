@@ -18,7 +18,7 @@ pub fn part1_main_test() {
 
 pub fn part2_main_test() {
 	day16.part2_main()
-	|> should.equal(Ok([]))
+	|> should.equal(Ok(0))
 }
 
 
