@@ -110,20 +110,6 @@ fn is_valid_field_range(field: Int, range: Range) -> Bool {
 	field >= range.min && field <= range.max
 }
 
-// fn test_tickets(rules: RuleSet, tickets) -> Bool {
-// 	tickets
-// 	|> list.all(test_ticket(_, rules))
-// }
-
-// fn test_ticket(ticket, rules: RuleSet) -> Bool {
-// 	// each field in the ticket must be valid for the corresponding rule
-// 	list.zip(rules, ticket)
-// 	|> list.all(fn(t) {
-// 		let tuple(rule, field) = t
-// 		validate_field_rule(field, rule)
-// 	})
-// }
-
 fn invalid_values_for_rule(values: List(Int), rule: Rule) -> List(Int) {
 	values
 	|> list.filter(fn(val){
@@ -131,7 +117,6 @@ fn invalid_values_for_rule(values: List(Int), rule: Rule) -> List(Int) {
 		|> bool.negate
 	})
 }
-
 
 // Entry
 
