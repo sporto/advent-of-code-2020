@@ -8,16 +8,19 @@ import gleam/map.{Map}
 
 const sample1 = "data/17/sample1.txt"
 
-fn read_input(file) {
+fn read_input(file: String) -> Result(Matrix, String) {
 	utils.get_input_lines(file, parse_line)
 	|> result.map(make_matrix)
-	|> result.map(part1)
 }
 
 pub type Cell{
 		On
 		Off
 	}
+
+fn is_on(cell) {
+	cell == On
+}
 
 // Parse input
 
@@ -80,20 +83,100 @@ fn add_index(l: List(a)) -> List(tuple(Int, a)) {
 
 // Entry
 
-pub fn part1_sample() {
+pub fn part1_sample() -> Result(Int, String) {
 	read_input(sample1)
 	|> result.map(part1)
 }
 
-fn part1(matrix) {
+fn part1(matrix: Matrix) -> Int {
+
+	// io.debug(count_active(matrix))
+
 	matrix
 	|> part1_mutate(0, _)
-	|> io.debug
+	// |> io.debug
+	|> print_matrix
+	|> count_active
 }
 
-fn part1_mutate(cycle, matrix) {
-	matrix
-	|> grow
+const max_cycles = 1
+
+fn part1_mutate(cycle: Int, matrix: Matrix) -> Matrix {
+	case cycle > max_cycles {
+		True -> matrix
+		False -> {
+			let next_matrix = matrix
+				|> grow
+				|> map.map_values(part1_mutate_cell(matrix))
+
+			part1_mutate(cycle + 1, next_matrix)
+		}
+	}
+}
+
+fn part1_mutate_cell(matrix) {
+	fn(point, cell) {
+		let neighbors = get_neighbors(matrix, point)
+
+		// io.debug(list.length(neighbors))
+
+		let active_neighbors = neighbors
+			|> list.filter(is_on)
+			|> list.length
+
+		case cell {
+			On -> {
+				case active_neighbors == 2 || active_neighbors == 3 {
+					True -> On
+					False -> Off
+				}
+			}
+			Off -> {
+				case active_neighbors == 3 {
+					True -> On
+					False -> Off
+				}
+			}
+		}
+	}
+}
+
+pub fn get_neighbors(matrix, point) {
+	let x_range = list.range(point.x - 1, point.x + 2)
+	let y_range = list.range(point.y - 1, point.y + 2)
+	let z_range = list.range(point.z - 1, point.z + 2)
+
+	// io.debug(x_range)
+	// io.debug(y_range)
+
+	x_range
+	|> list.fold(
+		from: [],
+		with: fn(x, x_acc) {
+			y_range
+			|> list.fold(
+				from: x_acc,
+				with: fn(y, y_acc) {
+					z_range
+					|> list.fold(
+						from: y_acc,
+						with: fn(z, acc) {
+							let this_point = Point(x, y, z)
+							case this_point == point {
+								True -> acc
+								False -> {
+									let value = map.get(matrix, this_point)
+										|> result.unwrap(Off)
+
+									[value, ..acc]
+								}
+							}
+						}
+					)
+				}
+			)
+		}
+	)
 }
 
 type Bounds{
@@ -107,38 +190,40 @@ type Bounds{
 	)
 }
 
-fn grow(matrix: Matrix) -> Matrix {
+pub fn grow(matrix: Matrix) -> Matrix {
 	let new_bounds = matrix
 	|> get_matrix_bounds
 	|> grow_bounds
 
-	// io.debug(new_bounds)
-	[
-		fill_x_min(new_bounds, _),
-		// fill_y(new_bounds),
-		// fill_z(new_bounds)
-	]
-	|> list.fold(
-		from: matrix,
-		with: fn(fun, matrix_acc) {
-			fun(matrix_acc)
-		}
-	)
+	fill(new_bounds, matrix)
 }
 
-fn fill_x_min(bounds, matrix) {
+fn fill(bounds, matrix) {
+	let x_range = list.range(bounds.min_x, bounds.max_x)
 	let y_range = list.range(bounds.min_y, bounds.max_y)
 	let z_range = list.range(bounds.min_z, bounds.max_z)
-	y_range
+
+	x_range
 	|> list.fold(
 		from: matrix,
-		with: fn(y, matrix_acc) {
-			z_range
+		with: fn(x, x_acc) {
+			y_range
 			|> list.fold(
-				from: matrix_acc,
-				with: fn(z, matrix_acc_2) {
-					let point = Point(x: bounds.min_x, y: y, z: z)
-					map.insert(matrix_acc_2, point, Off)
+				from: x_acc,
+				with: fn(y, y_acc) {
+					z_range
+					|> list.fold(
+						from: y_acc,
+						with: fn(z, acc) {
+							let point = Point(x, y, z)
+							map.update(acc, point, fn(res) {
+								case res {
+									Ok(current) -> current
+									Error(_) -> Off
+								}
+							})
+						}
+					)
 				}
 			)
 		}
@@ -181,4 +266,43 @@ fn grow_bounds(bounds: Bounds) -> Bounds {
 		min_z: bounds.min_z - 1,
 		max_z: bounds.max_z + 1,
 	)
+}
+
+fn count_active(matrix: Matrix) -> Int {
+	matrix
+	|> map.values
+	|> list.filter(is_on)
+	|> list.length
+}
+
+fn print_matrix(matrix) {
+	let bounds = get_matrix_bounds(matrix)
+	let x_range = list.range(bounds.min_x, bounds.max_x)
+	let y_range = list.range(bounds.min_y, bounds.max_y)
+	let z_range = list.range(bounds.min_z, bounds.max_z)
+
+	z_range
+	|> list.map(fn(z) {
+
+		y_range
+		|> list.map(fn(y) {
+
+			x_range
+			|> list.map(fn(x) {
+				let point = Point(x, y, z)
+				let cell = map.get(matrix, point) |> result.unwrap(Off)
+				case cell {
+					On -> "#"
+					Off -> "."
+				}
+			})
+			|> string.join("")
+			|> io.debug
+
+		})
+		|> string.join("\n")
+
+	})
+
+	matrix
 }
