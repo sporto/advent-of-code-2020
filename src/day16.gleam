@@ -8,6 +8,7 @@ import gleam/pair
 import gleam/bool
 import gleam/map
 import gleam/function
+import gleam/set
 
 const part1_rules_sample =  "data/16/part1-rules-sample.txt"
 const part2_rules_sample =  "data/16/part2-rules-sample.txt"
@@ -192,18 +193,43 @@ fn part2(tickets_input: String, rules_input: String, ticket: Ticket) {
 	// io.debug(map.get(values_per_index, 16))
 
 	let possible_rules_per_index = map.map_values(values_per_index, fn(key, values) {
-		let matched = rules
+		rules
 			|> list.filter_map(fn(rule) {
 				case invalid_values_for_rule(values, rule) {
-					[] -> Ok(rule)
+					[] -> Ok(rule.field)
 					_ -> Error(Nil)
 				}
 			})
-
-		matched
 	})
 
 	possible_rules_per_index
+	|> map.to_list
+	|> list.sort(fn(a, b) {
+		int.compare(pair.second(a) |> list.length, pair.second(b) |> list.length)
+	})
+	|> list.fold(
+		from: map.new(),
+		with: fn(t, acc) {
+			let tuple(field_index, matched_rules) = t
+
+			let matched_rules_set = set.from_list(matched_rules)
+			let used_rules = map.values(acc) |> set.from_list
+
+			let unused_rules =
+				set.fold(
+					over: used_rules,
+					from: matched_rules_set,
+					with: fn(r, ac) { set.delete(ac, r) }
+				)
+
+			case set.to_list(unused_rules) |> list.head {
+				Ok(head) -> {
+					map.insert(acc, field_index, head)
+				}
+				_ -> acc
+			}
+		}
+	)
 	|> io.debug
 
 
