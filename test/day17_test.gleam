@@ -2,17 +2,30 @@ import day17.{Point, On, Off}
 import gleam/should
 import gleam/map
 import gleam/list
+import gleam/io
 
 pub fn grow_test() {
 	let matrix = [
-		tuple(Point(1, 1, 1), On)
+		tuple(Point(0, 0, 0), On)
 	] |> map.from_list
 
-	matrix
+	let next_matrix = matrix
 	|> day17.grow
+
+	next_matrix
 	|> map.keys
 	|> list.length
 	|> should.equal(27)
+
+	let bounds = day17.get_matrix_bounds(next_matrix)
+	// io.debug(bounds)
+
+	bounds.min_x |> should.equal(-1)
+	bounds.max_x |> should.equal(1)
+	bounds.min_y |> should.equal(-1)
+	bounds.max_y |> should.equal(1)
+	bounds.min_z |> should.equal(-1)
+	bounds.max_z |> should.equal(1)
 }
 
 pub fn get_neighbors_test() {
@@ -29,5 +42,10 @@ pub fn get_neighbors_test() {
 
 pub fn part1_samples_test() {
 	day17.part1_sample()
-	|> should.equal(Ok(1))
+	|> should.equal(Ok(112))
+}
+
+pub fn part1_main_test() {
+	day17.part1_main()
+	|> should.equal(Ok(391))
 }

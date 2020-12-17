@@ -7,6 +7,7 @@ import gleam/int
 import gleam/map.{Map}
 
 const sample1 = "data/17/sample1.txt"
+const input = "data/17/input.txt"
 
 fn read_input(file: String) -> Result(Matrix, String) {
 	utils.get_input_lines(file, parse_line)
@@ -88,21 +89,27 @@ pub fn part1_sample() -> Result(Int, String) {
 	|> result.map(part1)
 }
 
+pub fn part1_main() -> Result(Int, String) {
+	read_input(input)
+	|> result.map(part1)
+}
+
 fn part1(matrix: Matrix) -> Int {
 
 	// io.debug(count_active(matrix))
 
 	matrix
+	// |> print_matrix
 	|> part1_mutate(0, _)
+	// |> print_matrix
 	// |> io.debug
-	|> print_matrix
 	|> count_active
 }
 
-const max_cycles = 1
+const max_cycles = 6
 
 fn part1_mutate(cycle: Int, matrix: Matrix) -> Matrix {
-	case cycle > max_cycles {
+	case cycle >= max_cycles {
 		True -> matrix
 		False -> {
 			let next_matrix = matrix
@@ -179,7 +186,7 @@ pub fn get_neighbors(matrix, point) {
 	)
 }
 
-type Bounds{
+pub type Bounds{
 	Bounds(
 		min_x: Int,
 		max_x: Int,
@@ -194,14 +201,16 @@ pub fn grow(matrix: Matrix) -> Matrix {
 	let new_bounds = matrix
 	|> get_matrix_bounds
 	|> grow_bounds
+	// |> io.debug
 
 	fill(new_bounds, matrix)
 }
 
 fn fill(bounds, matrix) {
-	let x_range = list.range(bounds.min_x, bounds.max_x)
-	let y_range = list.range(bounds.min_y, bounds.max_y)
-	let z_range = list.range(bounds.min_z, bounds.max_z)
+	let x_range = list.range(bounds.min_x, bounds.max_x + 1)
+	let y_range = list.range(bounds.min_y, bounds.max_y + 1)
+	let z_range = list.range(bounds.min_z, bounds.max_z + 1)
+	// io.debug(x_range)
 
 	x_range
 	|> list.fold(
@@ -230,7 +239,7 @@ fn fill(bounds, matrix) {
 	)
 }
 
-fn get_matrix_bounds(matrix: Matrix) -> Bounds {
+pub fn get_matrix_bounds(matrix: Matrix) -> Bounds {
 	let keys = matrix |> map.keys
 	let initial_bounds = Bounds(
 		min_x: 0,
@@ -277,12 +286,14 @@ fn count_active(matrix: Matrix) -> Int {
 
 fn print_matrix(matrix) {
 	let bounds = get_matrix_bounds(matrix)
+	io.debug(bounds)
 	let x_range = list.range(bounds.min_x, bounds.max_x)
 	let y_range = list.range(bounds.min_y, bounds.max_y)
 	let z_range = list.range(bounds.min_z, bounds.max_z)
 
 	z_range
 	|> list.map(fn(z) {
+		io.debug(z)
 
 		y_range
 		|> list.map(fn(y) {
@@ -300,7 +311,6 @@ fn print_matrix(matrix) {
 			|> io.debug
 
 		})
-		|> string.join("\n")
 
 	})
 
