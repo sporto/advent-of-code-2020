@@ -36,72 +36,7 @@ pub type Range{
 	Range(min: Int, max: Int)
 }
 
-pub fn part1_sample() {
-	part1(part1_sample_tickets, part1_rules_sample)
-}
-
-pub fn part1_main() {
-	part1(tickets, rules)
-}
-
-pub fn part2_sample() {
-	part2(
-		part2_sample_tickets,
-		part2_rules_sample,
-		part2_sample_ticket
-	)
-}
-
-pub fn part2_main() {
-	part2(
-		tickets,
-		rules,
-		main_ticket
-	)
-}
-
-fn part1(tickets_input, rules_input) {
-	try tickets = utils.get_input_lines(tickets_input, parse_ticket)
-	try rules = utils.get_input_lines(rules_input, parse_rule)
-
-	let sum = tickets
-	|> list.map(part1_validate_ticket(rules, _))
-	|> utils.sum
-
-	Ok(sum)
-}
-
-fn part1_validate_ticket(rules, ticket) -> Int {
-	ticket
-	|> list.map(part1_validate_field(rules, _))
-	|> utils.sum
-}
-
-fn is_valid_ticket(rules: RuleSet, ticket: Ticket) -> Bool {
-	ticket
-	|> list.all(is_valid_field(rules, _))
-}
-
-fn is_valid_field(rules, field) {
-	rules
-	|> list.any(validate_field_rule(field, _))
-}
-
-fn part1_validate_field(rules, field) -> Int {
-	case is_valid_field(rules, field) {
-		True -> 0
-		False -> field
-	}
-}
-
-fn validate_field_rule(field: Int, rule: Rule) -> Bool {
-	[rule.range1, rule.range2]
-	|> list.any(part1_validate_field_range(field, _))
-}
-
-fn part1_validate_field_range(field: Int, range: Range) -> Bool {
-	field >= range.min && field <= range.max
-}
+// Parse
 
 fn parse_ticket(line) {
 	line
@@ -138,6 +73,100 @@ fn parse_range(input) {
 		}
 		_ -> Error("Invalid range")
 	}
+}
+
+// Validations
+
+fn part1_validate_ticket(rules, ticket) -> Int {
+	ticket
+	|> list.map(part1_validate_field(rules, _))
+	|> utils.sum
+}
+
+fn part1_validate_field(rules, field) -> Int {
+	case is_valid_field(rules, field) {
+		True -> 0
+		False -> field
+	}
+}
+
+fn is_valid_ticket(rules: RuleSet, ticket: Ticket) -> Bool {
+	ticket
+	|> list.all(is_valid_field(rules, _))
+}
+
+fn is_valid_field(rules: RuleSet, field: Int) -> Bool {
+	rules
+	|> list.any(validate_field_rule(field, _))
+}
+
+fn validate_field_rule(field: Int, rule: Rule) -> Bool {
+	[rule.range1, rule.range2]
+	|> list.any(is_valid_field_range(field, _))
+}
+
+fn is_valid_field_range(field: Int, range: Range) -> Bool {
+	field >= range.min && field <= range.max
+}
+
+// fn test_tickets(rules: RuleSet, tickets) -> Bool {
+// 	tickets
+// 	|> list.all(test_ticket(_, rules))
+// }
+
+// fn test_ticket(ticket, rules: RuleSet) -> Bool {
+// 	// each field in the ticket must be valid for the corresponding rule
+// 	list.zip(rules, ticket)
+// 	|> list.all(fn(t) {
+// 		let tuple(rule, field) = t
+// 		validate_field_rule(field, rule)
+// 	})
+// }
+
+fn invalid_values_for_rule(values: List(Int), rule: Rule) -> List(Int) {
+	values
+	|> list.filter(fn(val){
+		validate_field_rule(val, rule)
+		|> bool.negate
+	})
+}
+
+
+// Entry
+
+pub fn part1_sample() {
+	part1(part1_sample_tickets, part1_rules_sample)
+}
+
+pub fn part1_main() {
+	part1(tickets, rules)
+}
+
+pub fn part2_sample() {
+	part2(
+		part2_sample_tickets,
+		part2_rules_sample,
+		part2_sample_ticket
+	)
+}
+
+pub fn part2_main() {
+	part2(
+		tickets,
+		rules,
+		main_ticket
+	)
+}
+
+fn part1(tickets_input, rules_input) {
+	try tickets = utils.get_input_lines(tickets_input, parse_ticket)
+	try rules = utils.get_input_lines(rules_input, parse_rule)
+
+	let sum = tickets
+	|> list.map(part1_validate_ticket(rules, _))
+	|> utils.sum
+
+	Ok(sum)
 }
 
 fn part2(tickets_input: String, rules_input: String, ticket: Ticket) {
@@ -178,45 +207,5 @@ fn part2(tickets_input: String, rules_input: String, ticket: Ticket) {
 	|> io.debug
 
 
-	// let rule_permutations = utils.permutations(rules)
-
-	// try valid_permutation = rule_permutations
-	// |> list.find_map(fn(permutation) {
-	// 	case test_tickets(permutation, valid_tickets) {
-	// 		True -> Ok(permutation)
-	// 		False -> Error(Nil)
-	// 	}
-	// })
-	// |> utils.replace_error("Could not find valid permutation")
-
-	// list.zip(valid_permutation, ticket)
-	// |> list.map(fn(t) {
-	// 	tuple(pair.first(t), pair.second(t))
-	// })
-	// |> io.debug
-
-	// Ok(valid_tickets)
 	Ok([0])
-}
-
-fn test_tickets(rules: RuleSet, tickets) -> Bool {
-	tickets
-	|> list.all(test_ticket(_, rules))
-}
-
-fn test_ticket(ticket, rules: RuleSet) -> Bool {
-	// each field in the ticket must be valid for the corresponding rule
-	list.zip(rules, ticket)
-	|> list.all(fn(t) {
-		let tuple(rule, field) = t
-		validate_field_rule(field, rule)
-	})
-}
-
-fn invalid_values_for_rule(values: List(Int), rule: Rule) -> List(Int) {
-	values
-	|> list.filter(fn(val){
-		validate_field_rule(val, rule)
-		|> bool.negate
-	})
 }
