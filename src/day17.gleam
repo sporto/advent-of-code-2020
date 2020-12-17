@@ -119,6 +119,11 @@ pub fn part1_main() -> Result(Int, String) {
 	|> result.map(part1)
 }
 
+pub fn part2_main() -> Result(Int, String) {
+	read_input_4d(input)
+	|> result.map(part2)
+}
+
 fn part1(matrix: Matrix3D) -> Int {
 
 	// io.debug(count_active(matrix))
