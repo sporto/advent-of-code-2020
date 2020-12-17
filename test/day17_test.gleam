@@ -1,4 +1,4 @@
-import day17.{Point, On, Off}
+import day17.{Point3D, On, Off}
 import gleam/should
 import gleam/map
 import gleam/list
@@ -6,18 +6,18 @@ import gleam/io
 
 pub fn grow_test() {
 	let matrix = [
-		tuple(Point(0, 0, 0), On)
+		tuple(Point3D(0, 0, 0), On)
 	] |> map.from_list
 
 	let next_matrix = matrix
-	|> day17.grow
+	|> day17.grow_3d
 
 	next_matrix
 	|> map.keys
 	|> list.length
 	|> should.equal(27)
 
-	let bounds = day17.get_matrix_bounds(next_matrix)
+	let bounds = day17.get_matrix_3d_bounds(next_matrix)
 	// io.debug(bounds)
 
 	bounds.min_x |> should.equal(-1)
@@ -29,7 +29,7 @@ pub fn grow_test() {
 }
 
 pub fn get_neighbors_test() {
-	let point = Point(1, 1, 1)
+	let point = Point3D(1, 1, 1)
 
 	let matrix = [
 		tuple(point, On)

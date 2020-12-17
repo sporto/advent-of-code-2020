@@ -9,9 +9,9 @@ import gleam/map.{Map}
 const sample1 = "data/17/sample1.txt"
 const input = "data/17/input.txt"
 
-fn read_input(file: String) -> Result(Matrix, String) {
+fn read_input_3d(file: String) -> Result(Matrix3D, String) {
 	utils.get_input_lines(file, parse_line)
-	|> result.map(make_matrix)
+	|> result.map(make_matrix_3d)
 }
 
 pub type Cell{
@@ -39,25 +39,19 @@ fn parse_char(c) {
 	}
 }
 
-pub type Point{
-	Point(x: Int, y: Int, z: Int)
+pub type Point3D{
+	Point3D(x: Int, y: Int, z: Int)
 }
 
-pub type Matrix = Map(Point, Cell)
+pub type Point4D{
+	Point4D(x: Int, y: Int, z: Int, w: Int)
+}
 
-// fn get_x(point) {
-// 	point.x
-// }
+pub type Matrix3D = Map(Point3D, Cell)
 
-// fn get_y(point) {
-// 	point.y
-// }
+pub type Matrix4D = Map(Point4D, Cell)
 
-// fn get_z(point) {
-// 	point.z
-// }
-
-fn make_matrix(input: List(List(Cell))) -> Matrix {
+fn make_matrix_3d(input: List(List(Cell))) -> Matrix3D {
 	input
 	|> add_index
 	|> list.fold(
@@ -70,7 +64,7 @@ fn make_matrix(input: List(List(Cell))) -> Matrix {
 				from: acc,
 				with: fn(col_tuple, acc_) {
 					let tuple(col_ix, cell) = col_tuple
-					let point = Point(col_ix, row_ix, 0)
+					let point = Point3D(col_ix, row_ix, 0)
 					map.insert(acc_, point, cell)
 				}
 			)
@@ -85,16 +79,16 @@ fn add_index(l: List(a)) -> List(tuple(Int, a)) {
 // Entry
 
 pub fn part1_sample() -> Result(Int, String) {
-	read_input(sample1)
+	read_input_3d(sample1)
 	|> result.map(part1)
 }
 
 pub fn part1_main() -> Result(Int, String) {
-	read_input(input)
+	read_input_3d(input)
 	|> result.map(part1)
 }
 
-fn part1(matrix: Matrix) -> Int {
+fn part1(matrix: Matrix3D) -> Int {
 
 	// io.debug(count_active(matrix))
 
@@ -108,12 +102,12 @@ fn part1(matrix: Matrix) -> Int {
 
 const max_cycles = 6
 
-fn part1_mutate(cycle: Int, matrix: Matrix) -> Matrix {
+fn part1_mutate(cycle: Int, matrix: Matrix3D) -> Matrix3D {
 	case cycle >= max_cycles {
 		True -> matrix
 		False -> {
 			let next_matrix = matrix
-				|> grow
+				|> grow_3d
 				|> map.map_values(part1_mutate_cell(matrix))
 
 			part1_mutate(cycle + 1, next_matrix)
@@ -121,7 +115,7 @@ fn part1_mutate(cycle: Int, matrix: Matrix) -> Matrix {
 	}
 }
 
-fn part1_mutate_cell(matrix) {
+fn part1_mutate_cell(matrix: Matrix3D) {
 	fn(point, cell) {
 		let neighbors = get_neighbors(matrix, point)
 
@@ -148,7 +142,7 @@ fn part1_mutate_cell(matrix) {
 	}
 }
 
-pub fn get_neighbors(matrix, point) {
+pub fn get_neighbors(matrix: Matrix3D, point) {
 	let x_range = list.range(point.x - 1, point.x + 2)
 	let y_range = list.range(point.y - 1, point.y + 2)
 	let z_range = list.range(point.z - 1, point.z + 2)
@@ -168,7 +162,7 @@ pub fn get_neighbors(matrix, point) {
 					|> list.fold(
 						from: y_acc,
 						with: fn(z, acc) {
-							let this_point = Point(x, y, z)
+							let this_point = Point3D(x, y, z)
 							case this_point == point {
 								True -> acc
 								False -> {
@@ -186,8 +180,8 @@ pub fn get_neighbors(matrix, point) {
 	)
 }
 
-pub type Bounds{
-	Bounds(
+pub type Bounds3D{
+	Bounds3D(
 		min_x: Int,
 		max_x: Int,
 		min_y: Int,
@@ -197,16 +191,16 @@ pub type Bounds{
 	)
 }
 
-pub fn grow(matrix: Matrix) -> Matrix {
+pub fn grow_3d(matrix: Matrix3D) -> Matrix3D {
 	let new_bounds = matrix
-	|> get_matrix_bounds
-	|> grow_bounds
+	|> get_matrix_3d_bounds
+	|> grow_bounds_3d
 	// |> io.debug
 
-	fill(new_bounds, matrix)
+	fill_3d(new_bounds, matrix)
 }
 
-fn fill(bounds, matrix) {
+fn fill_3d(bounds: Bounds3D, matrix: Matrix3D) -> Matrix3D {
 	let x_range = list.range(bounds.min_x, bounds.max_x + 1)
 	let y_range = list.range(bounds.min_y, bounds.max_y + 1)
 	let z_range = list.range(bounds.min_z, bounds.max_z + 1)
@@ -224,7 +218,7 @@ fn fill(bounds, matrix) {
 					|> list.fold(
 						from: y_acc,
 						with: fn(z, acc) {
-							let point = Point(x, y, z)
+							let point = Point3D(x, y, z)
 							map.update(acc, point, fn(res) {
 								case res {
 									Ok(current) -> current
@@ -239,9 +233,9 @@ fn fill(bounds, matrix) {
 	)
 }
 
-pub fn get_matrix_bounds(matrix: Matrix) -> Bounds {
+pub fn get_matrix_3d_bounds(matrix: Matrix3D) -> Bounds3D {
 	let keys = matrix |> map.keys
-	let initial_bounds = Bounds(
+	let initial_bounds = Bounds3D(
 		min_x: 0,
 		max_x: 0,
 		min_y: 0,
@@ -253,8 +247,8 @@ pub fn get_matrix_bounds(matrix: Matrix) -> Bounds {
 	keys
 	|> list.fold(
 		from: initial_bounds,
-		with: fn(key: Point, bounds_acc: Bounds) {
-			Bounds(
+		with: fn(key: Point3D, bounds_acc: Bounds3D) {
+			Bounds3D(
 				min_x: int.min(bounds_acc.min_x, key.x),
 				max_x: int.max(bounds_acc.max_x, key.x),
 				min_y: int.min(bounds_acc.min_y, key.y),
@@ -266,8 +260,8 @@ pub fn get_matrix_bounds(matrix: Matrix) -> Bounds {
 	)
 }
 
-fn grow_bounds(bounds: Bounds) -> Bounds {
-	Bounds(
+fn grow_bounds_3d(bounds: Bounds3D) -> Bounds3D {
+	Bounds3D(
 		min_x: bounds.min_x - 1,
 		max_x: bounds.max_x + 1,
 		min_y: bounds.min_y - 1,
@@ -277,7 +271,7 @@ fn grow_bounds(bounds: Bounds) -> Bounds {
 	)
 }
 
-fn count_active(matrix: Matrix) -> Int {
+fn count_active(matrix: Matrix3D) -> Int {
 	matrix
 	|> map.values
 	|> list.filter(is_on)
@@ -285,7 +279,7 @@ fn count_active(matrix: Matrix) -> Int {
 }
 
 fn print_matrix(matrix) {
-	let bounds = get_matrix_bounds(matrix)
+	let bounds = get_matrix_3d_bounds(matrix)
 	io.debug(bounds)
 	let x_range = list.range(bounds.min_x, bounds.max_x)
 	let y_range = list.range(bounds.min_y, bounds.max_y)
@@ -300,7 +294,7 @@ fn print_matrix(matrix) {
 
 			x_range
 			|> list.map(fn(x) {
-				let point = Point(x, y, z)
+				let point = Point3D(x, y, z)
 				let cell = map.get(matrix, point) |> result.unwrap(Off)
 				case cell {
 					On -> "#"
