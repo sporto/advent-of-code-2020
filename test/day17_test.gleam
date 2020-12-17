@@ -35,7 +35,7 @@ pub fn get_neighbors_test() {
 		tuple(point, On)
 	] |> map.from_list
 
-	day17.get_neighbors(matrix, point)
+	day17.get_neighbors_3d(matrix, point)
 	|> list.length
 	|> should.equal(26)
 }
@@ -48,4 +48,9 @@ pub fn part1_samples_test() {
 pub fn part1_main_test() {
 	day17.part1_main()
 	|> should.equal(Ok(391))
+}
+
+pub fn part2_samples_test() {
+	day17.part2_sample()
+	|> should.equal(Ok(848))
 }
