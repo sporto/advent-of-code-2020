@@ -5,6 +5,8 @@ import gleam/result
 import gleam/string
 import gleam/io
 import gleam/pair
+import gleam/bool
+import gleam/map
 import gleam/function
 
 const part1_rules_sample =  "data/16/part1-rules-sample.txt"
@@ -75,17 +77,24 @@ fn part1_validate_ticket(rules, ticket) -> Int {
 	|> utils.sum
 }
 
-fn part1_validate_field(rules, field) {
-	let is_valid = rules
-	|> list.any(part1_validate_field_rule(field, _))
+fn is_valid_ticket(rules: RuleSet, ticket: Ticket) -> Bool {
+	ticket
+	|> list.all(is_valid_field(rules, _))
+}
 
-	case is_valid {
+fn is_valid_field(rules, field) {
+	rules
+	|> list.any(validate_field_rule(field, _))
+}
+
+fn part1_validate_field(rules, field) -> Int {
+	case is_valid_field(rules, field) {
 		True -> 0
 		False -> field
 	}
 }
 
-fn part1_validate_field_rule(field: Int, rule: Rule) -> Bool {
+fn validate_field_rule(field: Int, rule: Rule) -> Bool {
 	[rule.range1, rule.range2]
 	|> list.any(part1_validate_field_range(field, _))
 }
@@ -138,31 +147,56 @@ fn part2(tickets_input: String, rules_input: String, ticket: Ticket) {
 	let valid_tickets = tickets
 	|> list.filter(is_valid_ticket(rules, _))
 
-	let rule_permutations = utils.permutations(rules)
+	let values_per_index = list.range(0, list.length(main_ticket))
+		|> list.fold(
+			from: map.new(),
+			with: fn(ix, acc) {
+				// Collect all values at this index
+				let values = valid_tickets |> list.map(fn(ticket) {
+					list.at(ticket, ix) |> result.unwrap(-1)
+				})
 
-	try valid_permutation = rule_permutations
-	|> list.find_map(fn(permutation) {
-		case test_tickets(permutation, valid_tickets) {
-			True -> Ok(permutation)
-			False -> Error(Nil)
-		}
-	})
-	|> utils.replace_error("Could not find valid permutation")
+				map.insert(acc, ix, values)
+			}
+		)
 
-	list.zip(valid_permutation, ticket)
-	|> list.map(fn(t) {
-		tuple(pair.first(t), pair.second(t))
+	// io.debug(map.get(values_per_index, 16))
+
+	let possible_rules_per_index = map.map_values(values_per_index, fn(key, values) {
+		let matched = rules
+			|> list.filter_map(fn(rule) {
+				case invalid_values_for_rule(values, rule) {
+					[] -> Ok(rule)
+					_ -> Error(Nil)
+				}
+			})
+
+		matched
 	})
+
+	possible_rules_per_index
 	|> io.debug
 
-	Ok(valid_tickets)
-}
 
-fn is_valid_ticket(rules, ticket) {
-	case part1_validate_ticket(rules, ticket) {
-		0 -> True
-		_ -> False
-	}
+	// let rule_permutations = utils.permutations(rules)
+
+	// try valid_permutation = rule_permutations
+	// |> list.find_map(fn(permutation) {
+	// 	case test_tickets(permutation, valid_tickets) {
+	// 		True -> Ok(permutation)
+	// 		False -> Error(Nil)
+	// 	}
+	// })
+	// |> utils.replace_error("Could not find valid permutation")
+
+	// list.zip(valid_permutation, ticket)
+	// |> list.map(fn(t) {
+	// 	tuple(pair.first(t), pair.second(t))
+	// })
+	// |> io.debug
+
+	// Ok(valid_tickets)
+	Ok([0])
 }
 
 fn test_tickets(rules: RuleSet, tickets) -> Bool {
@@ -175,6 +209,14 @@ fn test_ticket(ticket, rules: RuleSet) -> Bool {
 	list.zip(rules, ticket)
 	|> list.all(fn(t) {
 		let tuple(rule, field) = t
-		part1_validate_field_rule(field, rule)
+		validate_field_rule(field, rule)
+	})
+}
+
+fn invalid_values_for_rule(values: List(Int), rule: Rule) -> List(Int) {
+	values
+	|> list.filter(fn(val){
+		validate_field_rule(val, rule)
+		|> bool.negate
 	})
 }
