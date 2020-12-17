@@ -167,16 +167,14 @@ fn is_valid_ticket(rules, ticket) {
 
 fn test_tickets(rules: RuleSet, tickets) -> Bool {
 	tickets
-	|> list.map(test_ticket(_, rules))
-	|> list.all(function.identity)
+	|> list.all(test_ticket(_, rules))
 }
 
 fn test_ticket(ticket, rules: RuleSet) -> Bool {
 	// each field in the ticket must be valid for the corresponding rule
 	list.zip(rules, ticket)
-	|> list.map(fn(t) {
+	|> list.all(fn(t) {
 		let tuple(rule, field) = t
 		part1_validate_field_rule(field, rule)
 	})
-	|> list.all(function.identity)
 }
