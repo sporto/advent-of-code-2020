@@ -15,11 +15,12 @@ pub type Token{
 	Mul
 }
 
-pub fn parse(input: String) {
+pub fn parse(input: String) -> Int {
 	input
 	|> string.to_graphemes
 	|> tokenize([], _)
 	|> consume([], _)
+	|> extract
 }
 
 fn tokenize(tokens: List(Token), chars: List(String)) -> List(Token) {
@@ -82,8 +83,6 @@ pub fn pop_stack(stack: Stack) -> Result(tuple(Token, Stack), Nil) {
 pub fn take_until_open(acc, stack: Stack) {
 	case pop_stack(stack) {
 		Ok(tuple(val, next_stack)) -> {
-			// io.debug(val)
-			// io.debug(next_stack |> queue.to_list)
 			case val {
 				Open -> tuple(acc, next_stack)
 				_ -> take_until_open(
@@ -99,9 +98,7 @@ pub fn take_until_open(acc, stack: Stack) {
 // Evaluate until an Open is found
 // Push the evaluated num into the stack
 pub fn evaluate(stack: Stack) -> Stack {
-	// io.debug(stack)
 	let tuple(values, next_stack) = take_until_open([], stack)
-	// io.debug(next_stack |> queue.to_list)
 
 	let res = values
 		|> list.fold(
@@ -120,10 +117,22 @@ pub fn evaluate(stack: Stack) -> Stack {
 		|> pair.first
 		|> Num
 
-	io.debug(next_stack)
 	push_stack(next_stack, res)
 }
 
 fn add(a, b) { a + b }
 
 fn mul(a, b) { a * b }
+
+fn extract(tokens: List(Token)) -> Int {
+	tokens
+	|> list.fold(
+		from: 0,
+		with: fn(token, acc) {
+			case token {
+				Num(num) -> acc + num
+				_ -> acc
+			}
+		}
+	)
+}

@@ -5,10 +5,43 @@ import gleam/pair
 import gleam/list
 import gleam/io
 
-// pub fn eval_test() {
-// 	day18.eval("1 + 2")
-// 	|> should.equal(3)
-// }
+pub fn parse_test() {
+	day18.parse("1 + 2")
+	|> should.equal(3)
+
+	day18.parse("(1 + 2)")
+	|> should.equal(3)
+
+	day18.parse("(1 + 2) + 3")
+	|> should.equal(6)
+
+	day18.parse("3 + (1 + 2)")
+	|> should.equal(6)
+
+	day18.parse("2 * (4 + 8)")
+	|> should.equal(24)
+
+	day18.parse("(2 * 4) + 8")
+	|> should.equal(16)
+
+	day18.parse("1 + 2 * 3 + 4 * 5 + 6")
+	|> should.equal(71)
+
+	day18.parse("1 + (2 * 3) + (4 * (5 + 6))")
+	|> should.equal(51)
+
+	day18.parse("2 * 3 + (4 * 5)")
+	|> should.equal(26)
+
+	day18.parse("5 + (8 * 3 + 9 + 3 * 4 * 3)")
+	|> should.equal(437)
+
+	day18.parse("5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))")
+	|> should.equal(12240)
+
+	day18.parse("((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2")
+	|> should.equal(13632)
+}
 
 pub fn take_until_open_test() {
 	let res = [Num(1), Num(2), Open, Num(3), Num(4)]
@@ -64,18 +97,4 @@ pub fn evaluate_test() {
 		[Num(2), Sum, Num(3), Mul, Num(5)],
 		[Num(25)]
 	)
-}
-
-
-pub fn queue_test() {
-	[11,10]
-	|> queue.from_list
-	|> queue.push_front(2)
-	|> queue.push_front(1)
-	|> io.debug
-	|> queue.push_back(20)
-	|> queue.push_back(21)
-	|> io.debug
-	|> queue.to_list
-	|> should.equal([1,2,10,11,20,21])
 }
