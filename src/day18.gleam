@@ -17,15 +17,19 @@ pub type Token{
 }
 
 pub fn part1() {
-	utils.get_input_lines(input, fn(line) { Ok(parse(line)) })
+	utils.get_input_lines(input, fn(line) { Ok(parse_linear(line)) })
 	|> result.map(utils.sum)
 }
 
-pub fn parse(input: String) -> Int {
+pub fn parse_linear(input: String) -> Int {
+	parse(evaluate_linear, input)
+}
+
+pub fn parse(evaluate_fn, input: String) -> Int {
 	input
 	|> string.to_graphemes
 	|> tokenize([], _)
-	|> consume([], _)
+	|> consume(evaluate_fn, [], _)
 	|> extract
 }
 
@@ -53,19 +57,19 @@ fn tokenize(tokens: List(Token), chars: List(String)) -> List(Token) {
 
 type Stack = List(Token)
 
-fn consume(stack: Stack, tokens: List(Token)) -> Stack {
+fn consume(evaluate_fn, stack: Stack, tokens: List(Token)) -> Stack {
 	case tokens {
-		[] -> evaluate(stack)
+		[] -> evaluate(evaluate_fn, stack)
 		[x, ..rest] -> {
 			case x {
-				Open -> consume(push_stack(stack, x), rest)
+				Open -> consume(evaluate_fn, push_stack(stack, x), rest)
 				Close -> {
-					let next_stack = evaluate(stack)
-					consume(next_stack, rest)
+					let next_stack = evaluate(evaluate_fn, stack)
+					consume(evaluate_fn, next_stack, rest)
 				}
-				Sum -> consume(push_stack(stack, x), rest)
-				Mul -> consume(push_stack(stack, x), rest)
-				Num(val) -> consume(push_stack(stack, x), rest)
+				Sum -> consume(evaluate_fn, push_stack(stack, x), rest)
+				Mul -> consume(evaluate_fn, push_stack(stack, x), rest)
+				Num(val) -> consume(evaluate_fn, push_stack(stack, x), rest)
 			}
 		}
 	}
@@ -103,10 +107,16 @@ pub fn take_until_open(acc, stack: Stack) {
 
 // Evaluate until an Open is found
 // Push the evaluated num into the stack
-pub fn evaluate(stack: Stack) -> Stack {
+pub fn evaluate(evaluate_fn, stack: Stack) -> Stack {
 	let tuple(values, next_stack) = take_until_open([], stack)
 
-	let res = values
+	let res = evaluate_fn(values)
+
+	push_stack(next_stack, res)
+}
+
+pub fn evaluate_linear(values: List(Token)) -> Token {
+	values
 		|> list.fold(
 			from: tuple(0, add),
 			with: fn(val, acc_tuple) {
@@ -122,8 +132,6 @@ pub fn evaluate(stack: Stack) -> Stack {
 		)
 		|> pair.first
 		|> Num
-
-	push_stack(next_stack, res)
 }
 
 fn add(a, b) { a + b }
