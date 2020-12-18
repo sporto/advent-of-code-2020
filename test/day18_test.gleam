@@ -4,7 +4,6 @@ import gleam/map
 import gleam/pair
 import gleam/list
 import gleam/io
-import gleam/queue
 
 // pub fn eval_test() {
 // 	day18.eval("1 + 2")
@@ -20,21 +19,21 @@ pub fn take_until_open_test() {
 	|> pair.first
 	|> should.equal([Num(3), Num(4)])
 
-	let expected_stack = [Num(1), Num(2)] |> day18.to_stack
+	let expected_stack = [Num(1), Num(2)]
+		|> day18.to_stack
 
 	res
 	|> pair.second
-	|> queue.is_equal(_, expected_stack)
-	|> should.be_true
+	|> should.equal(expected_stack)
 }
 
 fn evaluate_test_(input_list, expected_list) {
-	let expected = expected_list |> day18.to_stack |> queue.to_list
+	let expected = expected_list |> day18.to_stack
 
 	let actual = input_list
 	|> day18.to_stack
 	|> day18.evaluate
-	|> queue.to_list
+	// |> io.debug
 
 	actual
 	|> should.equal(expected)
@@ -56,14 +55,27 @@ pub fn evaluate_test() {
 		[Num(1), Sum, Num(5)]
 	)
 
-	// evaluate_test_(
-	// 	[Num(2), Mul, Num(3), Sum, Num(5)],
-	// 	[Num(11)]
-	// )
+	evaluate_test_(
+		[Num(2), Mul, Num(3), Sum, Num(5)],
+		[Num(11)]
+	)
 
-	// evaluate_test_(
-	// 	[Num(2), Sum, Num(3), Mul, Num(5)],
-	// 	[Num(25)]
-	// )
+	evaluate_test_(
+		[Num(2), Sum, Num(3), Mul, Num(5)],
+		[Num(25)]
+	)
 }
 
+
+pub fn queue_test() {
+	[11,10]
+	|> queue.from_list
+	|> queue.push_front(2)
+	|> queue.push_front(1)
+	|> io.debug
+	|> queue.push_back(20)
+	|> queue.push_back(21)
+	|> io.debug
+	|> queue.to_list
+	|> should.equal([1,2,10,11,20,21])
+}

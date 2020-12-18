@@ -4,7 +4,6 @@ import gleam/list
 import gleam/int
 import gleam/io
 import gleam/pair
-import gleam/queue.{Queue}
 
 const input = "data/18/input.txt"
 
@@ -20,7 +19,7 @@ pub fn parse(input: String) {
 	input
 	|> string.to_graphemes
 	|> tokenize([], _)
-	|> consume(queue.new(), _)
+	|> consume([], _)
 }
 
 fn tokenize(tokens: List(Token), chars: List(String)) -> List(Token) {
@@ -45,7 +44,7 @@ fn tokenize(tokens: List(Token), chars: List(String)) -> List(Token) {
 	}
 }
 
-type Stack = Queue(Token)
+type Stack = List(Token)
 
 fn consume(stack: Stack, tokens: List(Token)) -> Stack {
 	case tokens {
@@ -65,18 +64,19 @@ fn consume(stack: Stack, tokens: List(Token)) -> Stack {
 	}
 }
 
-pub fn to_stack(l: List(a)) -> Queue(a) {
-	l
-	// |> list.reverse
-	|> queue.from_list
+pub fn to_stack(l: List(Token)) -> Stack {
+	list.reverse(l)
 }
 
-pub fn push_stack(stack: Queue(a), v: a) -> Queue(a) {
-	queue.push_back(stack, v)
+pub fn push_stack(stack: Stack, v: Token) -> Stack {
+	[v, ..stack]
 }
 
-pub fn pop_stack(stack: Queue(a)) -> Result(tuple(a, Queue(a)), Nil) {
-	queue.pop_back(stack)
+pub fn pop_stack(stack: Stack) -> Result(tuple(Token, Stack), Nil) {
+	case stack {
+		[x, ..rest] -> Ok(tuple(x, rest))
+		_ -> Error(Nil)
+	}
 }
 
 pub fn take_until_open(acc, stack: Stack) {
@@ -120,7 +120,7 @@ pub fn evaluate(stack: Stack) -> Stack {
 		|> pair.first
 		|> Num
 
-	// io.debug(next_stack)
+	io.debug(next_stack)
 	push_stack(next_stack, res)
 }
 
