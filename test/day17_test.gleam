@@ -57,5 +57,5 @@ pub fn part2_samples_test() {
 
 pub fn part2_main_test() {
 	day17.part2_main()
-	|> should.equal(Ok(391))
+	|> should.equal(Ok(2264))
 }

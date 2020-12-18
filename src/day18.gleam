@@ -2,27 +2,11 @@ import utils
 import gleam/string
 import gleam/list
 import gleam/int
+import gleam/io
+import gleam/pair
 import gleam/queue.{Queue}
 
 const input = "data/18/input.txt"
-
-// fn read_input(file: String) -> Result(Matrix3D, String) {
-// 	utils.get_input_lines(file, parse_line)
-// 	|> result.map(make_matrix_3d)
-// }
-
-// pub fn part1_sample() -> Result(Int, String) {
-// 	read_input(sample1)
-// 	|> result.map(part1)
-// }
-
-// pub type Atom{
-// 	Expression()
-// }
-
-// + 2
-// + (2 * 3)
-
 
 pub type Token{
 	Num(Int)
@@ -30,12 +14,6 @@ pub type Token{
 	Close
 	Sum
 	Mul
-}
-
-fn eval(input: String) {
-	// parse(input)
-
-	1
 }
 
 pub fn parse(input: String) {
@@ -67,21 +45,6 @@ fn tokenize(tokens: List(Token), chars: List(String)) -> List(Token) {
 	}
 }
 
-// fn consume(total, tokens: List(Token)) -> Int {
-// 	case tokens {
-// 		[] -> 0
-// 		[x, ..rest] -> {
-// 			case x {
-// 				Open -> total + consume(0, rest)
-// 				Close -> total
-// 				Sum -> total + consume(0, rest)
-// 				Mul -> total * consume(0, rest)
-// 				Num(val) -> consume(val, rest)
-// 			}
-// 		}
-// 	}
-// }
-
 type Stack = Queue(Token)
 
 fn consume(stack: Stack, tokens: List(Token)) -> Stack {
@@ -102,18 +65,65 @@ fn consume(stack: Stack, tokens: List(Token)) -> Stack {
 	}
 }
 
+pub fn to_stack(l: List(a)) -> Queue(a) {
+	l
+	// |> list.reverse
+	|> queue.from_list
+}
 
-fn push_stack(stack: Stack, v: Token) -> Stack {
+pub fn push_stack(stack: Queue(a), v: a) -> Queue(a) {
 	queue.push_back(stack, v)
 }
 
-fn pop_stack(stack: Stack) -> Result(tuple(Token, Stack), Nil) {
+pub fn pop_stack(stack: Queue(a)) -> Result(tuple(a, Queue(a)), Nil) {
 	queue.pop_back(stack)
+}
+
+pub fn take_until_open(acc, stack: Stack) {
+	case pop_stack(stack) {
+		Ok(tuple(val, next_stack)) -> {
+			// io.debug(val)
+			// io.debug(next_stack |> queue.to_list)
+			case val {
+				Open -> tuple(acc, next_stack)
+				_ -> take_until_open(
+					[val, ..acc],
+					next_stack
+				)
+			}
+		}
+		Error(_) -> tuple(acc, stack)
+	}
 }
 
 // Evaluate until an Open is found
 // Push the evaluated num into the stack
-fn evaluate(stack) -> Stack {
-	// TODO
-	queue.new()
+pub fn evaluate(stack: Stack) -> Stack {
+	// io.debug(stack)
+	let tuple(values, next_stack) = take_until_open([], stack)
+	// io.debug(next_stack |> queue.to_list)
+
+	let res = values
+		|> list.fold(
+			from: tuple(0, add),
+			with: fn(val, acc_tuple) {
+				let tuple(total, operation) = acc_tuple
+				case val {
+					Num(num) -> tuple(operation(total, num), add)
+					Sum -> tuple(total, add)
+					Mul -> tuple(total, mul)
+					Open -> tuple(total, add)
+					Close -> tuple(total, add)
+				}
+			}
+		)
+		|> pair.first
+		|> Num
+
+	// io.debug(next_stack)
+	push_stack(next_stack, res)
 }
+
+fn add(a, b) { a + b }
+
+fn mul(a, b) { a * b }
