@@ -98,3 +98,8 @@ pub fn evaluate_test() {
 		[Num(25)]
 	)
 }
+
+pub fn part1_test() {
+	day18.part1()
+	|> should.equal(Ok(0))
+}

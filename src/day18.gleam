@@ -4,6 +4,7 @@ import gleam/list
 import gleam/int
 import gleam/io
 import gleam/pair
+import gleam/result
 
 const input = "data/18/input.txt"
 
@@ -13,6 +14,11 @@ pub type Token{
 	Close
 	Sum
 	Mul
+}
+
+pub fn part1() {
+	utils.get_input_lines(input, fn(line) { Ok(parse(line)) })
+	|> result.map(utils.sum)
 }
 
 pub fn parse(input: String) -> Int {
