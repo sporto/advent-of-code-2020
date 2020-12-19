@@ -21,8 +21,17 @@ pub fn part1() {
 	|> result.map(utils.sum)
 }
 
+pub fn part2() {
+	utils.get_input_lines(input, fn(line) { Ok(parse_precedence(line)) })
+	|> result.map(utils.sum)
+}
+
 pub fn parse_linear(input: String) -> Int {
 	parse(evaluate_linear, input)
+}
+
+pub fn parse_precedence(input: String) -> Int {
+	parse(evaluate_addition_precedence, input)
 }
 
 pub fn parse(evaluate_fn, input: String) -> Int {
@@ -73,6 +82,10 @@ fn consume(evaluate_fn, stack: Stack, tokens: List(Token)) -> Stack {
 			}
 		}
 	}
+}
+
+pub fn new_stack() {
+	[]
 }
 
 pub fn to_stack(l: List(Token)) -> Stack {
@@ -132,6 +145,51 @@ pub fn evaluate_linear(values: List(Token)) -> Token {
 		)
 		|> pair.first
 		|> Num
+}
+
+pub fn evaluate_addition_precedence(values) {
+	// evaluate_linear(values)
+	// * push stack
+	// + push stack
+	// Num if top of stack is + evaluate
+	values
+	|> list.fold(
+		from: new_stack(),
+		with: fn(token, stack) {
+			let next_stack = push_stack(stack, token)
+			case token {
+				Sum -> next_stack
+				Mul -> next_stack
+				Num(num) -> {
+					case pop_stack(stack) {
+						Ok(tuple(previous_token, stack_without_1)) -> {
+							case previous_token {
+								Sum -> {
+									case pop_stack(stack_without_1) {
+										Ok(tuple(previous_previous_token, stack_without_2)) -> {
+											case previous_previous_token {
+												Num(other_num) -> {
+													push_stack(
+														stack_without_2,
+														Num(num + other_num)
+													)
+												}
+												_ -> next_stack
+											}
+										}
+										Error(_) -> next_stack
+									}
+								}
+								_ -> next_stack
+							}
+						}
+						Error(_) -> next_stack
+					}
+				}
+				_ -> next_stack
+			}
+		}
+	) |> evaluate_linear
 }
 
 fn add(a, b) { a + b }

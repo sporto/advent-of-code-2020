@@ -103,3 +103,28 @@ pub fn part1_test() {
 	day18.part1()
 	|> should.equal(Ok(6811433855019))
 }
+
+pub fn parse_precedence_test() {
+	day18.parse_precedence("2 * 3 + 4")
+	|> should.equal(14)
+
+	day18.parse_precedence("1 + 2 * 3 + 4 * 5 + 6")
+	|> should.equal(231)
+
+	day18.parse_precedence("1 + (2 * 3) + (4 * (5 + 6))")
+	|> should.equal(51)
+
+	day18.parse_precedence("2 * 3 + (4 * 5)")
+	|> should.equal(46)
+
+	day18.parse_precedence("5 + (8 * 3 + 9 + 3 * 4 * 3)")
+	|> should.equal(1445)
+
+	day18.parse_precedence("5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))")
+	|> should.equal(669060)
+}
+
+pub fn part2_test() {
+	day18.part2()
+	|> should.equal(Ok(129770152447927))
+}
