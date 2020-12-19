@@ -1,13 +1,17 @@
 import utils
 import gleam/string
 import gleam/int
+import gleam/bool
 import gleam/result
 import gleam/list
+import gleam/pair
 import gleam/map.{Map}
 import gleam/io
 
 const sample_rules = "data/19/sample-rules.txt"
 const sample_messages = "data/19/sample-messages.txt"
+const main_rules = "data/19/rules.txt"
+const main_messages = "data/19/messages.txt"
 
 pub type Rule{
 	Text(String)
@@ -18,7 +22,6 @@ pub type Rule{
 pub fn read_rules(input) {
 	utils.get_input_lines(input, parse_rule)
 	|> result.map(map.from_list)
-	// |> result.map(resolve_rules)
 }
 
 pub fn read_messages(input) {
@@ -82,78 +85,85 @@ pub fn part1_sample() {
 	try rules = read_rules(sample_rules)
 	try messages = read_messages(sample_messages)
 
-	io.debug(rules)
-	let valid = part1(rules, messages)
-	io.debug(valid)
-
-	Ok(1)
+	part1(rules, messages)
 }
 
-fn part1(rules, messages) {
+pub fn part1_main() {
+	try rules = read_rules(main_rules)
+	try messages = read_messages(main_messages)
+
+	part1(rules, messages)
+}
+
+fn part1(rules, messages) -> Result(Int, String) {
+	let keys = rules
+	|> map.keys
+	|> list.sort(int.compare)
+	|> list.reverse
+
+	let resolved = keys
+	|> list.fold(
+		from: map.new(),
+		with: fn(key, cache) {
+			let res = resolve_with_cache(rules, cache, key)
+			case res {
+				Ok(tt) -> {
+					pair.first(tt)
+				}
+				Error(e) -> cache
+			}
+		}
+	)
+
+	try valid = map.get(resolved, 0) |> utils.replace_error("Coudn't get")
+
 	messages
-	// |> list.map(check_message(rules, 0, _))
+	|> list.map(check_message(valid, _))
+	|> list.map(bool.to_int)
+	|> utils.sum
+	|> Ok
 }
 
-// fn check_message(rules_map, rule_index, message) {
-// 	// io.debug(message)
-// 	case map.get(rules_map, rule_index) {
-// 		Ok(rule) -> {
-// 			check_message_rule(rules_map, rule, message)
-// 		}
-// 		Error(_) -> Error("Invalid rule")
-// 	}
-// }
+fn resolve_with_cache(rules, cache, index) {
+	case resolve_using_cache(rules, cache, index) {
+		Ok(resolved) -> {
+			let next_cache = map.insert(cache, index, resolved)
+			Ok(tuple(next_cache, resolved))
+		}
+		Error(e) -> Error(e)
+	}
+}
 
-// fn check_message_rule(rules_map, rule, message) {
-// 	case rule {
-// 		Char(c) -> case c == message {
-// 			True -> Ok("")
-// 			False -> Error(message)
-// 		}
-// 		Either(rules) -> {
-// 			let results = rules
-// 				|> list.map(check_message_rule(rules_map, _, message))
-
-// 			results
-// 			|> list.fold(
-// 				from: Error(message),
-// 				with: fn(result, acc) {
-// 					case acc {
-// 						Ok(_) -> acc
-// 						Error(_) -> result
-// 					}
-// 				}
-// 			)
-// 		}
-// 		Sequence(rule_ids) -> {
-// 			rule_ids
-// 			|> list.fold(
-// 				from: Ok(message),
-// 				with: fn(rule_id, res) {
-// 					case res {
-// 						Error(_) -> res
-// 						Ok(mes) -> {
-// 							check_message(rules_map, rule_id, mes)
-// 						}
-// 					}
-// 				}
-// 			)
-// 		}
-// 	}
-// }
+fn resolve_using_cache(rules, cache, index) {
+	case map.get(cache, index) {
+		Ok(value) -> Ok(value)
+		// Not found in cache, resolve
+		Error(_) -> {
+			resolve(rules, index)
+		}
+	}
+}
 
 pub fn resolve(rules, index) -> Result(List(String), String) {
 	case map.get(rules, index) {
 		Ok(rule) -> {
-			case rule {
-				Text(value) -> Ok([value])
-				Or(_, _) -> todo
-				Seq(rule_ids) -> {
-					resolve_sequence(rules, rule_ids)
-				}
-			}
+			resolve_rule(rules, rule)
 		}
 		Error(_) -> Error("Invalid")
+	}
+}
+
+pub fn resolve_rule(rules, rule) -> Result(List(String), String) {
+	case rule {
+		Text(value) -> Ok([value])
+		Or(a, b) -> {
+			try aa = resolve_rule(rules, a)
+			try bb = resolve_rule(rules, b)
+			[aa, bb] |> list.flatten |> Ok
+		}
+		Seq(rule_ids) -> {
+			resolve_sequence(rules, rule_ids)
+		}
 	}
 }
 
@@ -176,9 +186,11 @@ pub fn combine(left: List(String), right: List(String)) -> List(String) {
 	left
 	|> list.map(fn(l) {
 		right
-		|> list.map(fn(r) {
-			string.append(l, r)
-		})
+		|> list.map(string.append(l, _))
 	})
 	|> list.flatten
+}
+
+fn check_message(valid: List(String), message: String) -> Bool {
+	list.contains(valid, message)
 }
