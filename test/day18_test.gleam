@@ -4,6 +4,8 @@ import gleam/map
 import gleam/pair
 import gleam/list
 import gleam/io
+import gleam/result
+import gleam/queue
 
 pub fn parse_linear_test() {
 	day18.parse_linear("1 + 2")
