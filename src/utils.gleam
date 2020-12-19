@@ -12,7 +12,7 @@ pub external fn read_file(name: String) -> Result(String, Dynamic) =
 pub external fn rem(Int, Int) -> Int =
   "erlang" "rem"
 
-pub fn split_lines(file) {
+pub fn split_lines(file: String) -> List(String) {
   string.split(file, "\n")
 }
 
