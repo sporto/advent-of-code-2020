@@ -10,6 +10,8 @@ import gleam/io
 
 const sample_rules = "data/19/sample-rules.txt"
 const sample_messages = "data/19/sample-messages.txt"
+const sample2_rules = "data/19/sample2-rules.txt"
+const sample2_messages = "data/19/sample2-messages.txt"
 const main_rules = "data/19/rules.txt"
 const main_messages = "data/19/messages.txt"
 
@@ -88,6 +90,15 @@ pub fn part1_sample() {
 	part1(rules, messages)
 }
 
+pub fn part1_sample2() {
+	try rules = read_rules(sample2_rules)
+	try messages = read_messages(sample2_messages)
+
+	// io.debug(rules)
+
+	part1(rules, messages)
+}
+
 pub fn part1_main() {
 	try rules = read_rules(main_rules)
 	try messages = read_messages(main_messages)
@@ -114,6 +125,8 @@ fn part1(rules, messages) -> Result(Int, String) {
 			}
 		}
 	)
+
+	// io.debug(resolved)
 
 	try valid = map.get(resolved, 0) |> utils.replace_error("Coudn't get")
 

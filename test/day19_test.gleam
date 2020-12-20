@@ -11,10 +11,15 @@ pub fn part1_sample_test() {
 	|> should.equal(Ok(2))
 }
 
-pub fn part1_main_test() {
-	day19.part1_main()
-	|> should.equal(Ok(0))
+pub fn part1_sample2_test() {
+	day19.part1_sample2()
+	|> should.equal(Ok(3))
 }
+
+// pub fn part1_main_test() {
+// 	day19.part1_main()
+// 	|> should.equal(Ok(230))
+// }
 
 pub fn sequence_test() {
 	let rules = [
