@@ -3,6 +3,7 @@ import gleam/list
 import gleam/result
 import gleam/int
 import gleam/string
+import gleam/set
 import gleam/io
 import gleam/pair
 import gleam/map.{Map}
@@ -12,20 +13,10 @@ const input = "data/20/input.txt"
 
 pub type TileLine = List(Bool)
 
-pub type TileRaw{
-	TileRaw(
-		id: Int,
-		lines: List(TileLine),
-	)
-}
-
 pub type Tile{
 	Tile(
 		id: Int,
-		left: List(Bool),
-		right: List(Bool),
-		top: List(Bool),
-		bottom: List(Bool),
+		lines: List(TileLine),
 	)
 }
 
@@ -39,6 +30,24 @@ fn get_x(coor: Coor) {
 
 fn get_y(coor: Coor) {
 	coor.y
+}
+
+type Bounds{
+	Bounds(
+		min_x: Int,
+		max_x: Int,
+		min_y: Int,
+		max_y: Int,
+	)
+}
+
+type Corners{
+	Corners(
+		top_left: Tile,
+		top_right: Tile,
+		bottom_left: Tile,
+		bottom_right: Tile,
+	)
 }
 
 pub type Grid = Map(Coor, Tile)
@@ -59,13 +68,12 @@ pub type Rotation{
 
 pub type Flip{
 	FlipNone
-	FlipH
-	FlipV
+	Flip
 }
 
 const directions = [ Top, Bottom, Left, Right ]
 const rotations = [ R0, R90, R180, R270 ]
-const flips = [ FlipNone, FlipH, FlipV ]
+const flips = [ FlipNone, Flip ]
 
 pub fn read(file: String) -> Result(List(Tile), String) {
 	utils.read_file(file)
@@ -74,14 +82,14 @@ pub fn read(file: String) -> Result(List(Tile), String) {
 	|> result.map(list.map(_, to_tile_info))
 }
 
-fn parse_input(file: String) -> Result(List(TileRaw), String) {
+fn parse_input(file: String) -> Result(List(Tile), String) {
 	file
 	|> string.split("\n\n")
 	|> list.map(parse_tile)
 	|> result.all
 }
 
-fn parse_tile(input) -> Result(TileRaw, String) {
+fn parse_tile(input) -> Result(Tile, String) {
 	let lines = input
 	|> string.split("\n")
 
@@ -94,7 +102,7 @@ fn parse_tile(input) -> Result(TileRaw, String) {
 			|> result.all
 			|> utils.replace_error("Could not parse tile lines")
 
-			Ok(TileRaw(id: id, lines: tile_lines))
+			Ok(Tile(id: id, lines: tile_lines))
 		}
 		_ -> Error("Invalid input")
 	}
@@ -124,7 +132,7 @@ fn parse_char(input) {
 	}
 }
 
-fn to_tile_info(tile: TileRaw) -> Tile {
+fn to_tile_info(tile: Tile) -> Tile {
 	Tile(
 		id: tile.id,
 		left: left_hash(tile.lines),
@@ -134,26 +142,26 @@ fn to_tile_info(tile: TileRaw) -> Tile {
 	)
 }
 
-fn left_hash(lines) {
+pub fn left_hash(lines) {
 	lines
 	|> list.map(list.head)
 	|> result.all
 	|> result.unwrap([])
 }
 
-fn right_hash(lines) {
+pub fn right_hash(lines) {
 	lines
 	|> list.map(list.reverse)
 	|> left_hash
 }
 
-fn top_hash(lines) {
+pub fn top_hash(lines) {
 	lines
 	|> list.head
 	|> result.unwrap([])
 }
 
-fn bottom_hash(lines) {
+pub fn bottom_hash(lines) {
 	lines
 	|> list.reverse
 	|> top_hash
@@ -174,43 +182,184 @@ pub fn part1_main() {
 }
 
 fn part1(tiles: List(Tile)) -> Result(Int, String) {
-
-	let grid = place(map.new(), tiles)
-	|> map.map_values(fn(k, tile: Tile) {
-		tile.id
+	tiles
+	|> list.map(fn(tile: Tile) {
+		io.debug(tile.id)
+		io.debug(tile.left)
+		// io.debug(tile.bottom)
 	})
+
+	generate_edge_map(tiles)
+	|> map.map_values(fn(k, v) { set.to_list(v) })
 	|> io.debug
 
-	let xs = grid |> map.keys |> list.map(get_x)
-	let ys = grid |> map.keys |> list.map(get_y)
-	let min_x = utils.min(xs)
-	let max_x = utils.max(xs)
-	let min_y = utils.min(ys)
-	let max_y = utils.max(ys)
+	Ok(0)
 
-	// io.debug(max_x)
+	// try grid = place_and_rotate(map.new(), tiles)
 
-	try top_left = map.get(grid, Coor(min_x, min_y)) |> utils.replace_error("No top left")
-	try top_right = map.get(grid, Coor(max_x, min_y)) |> utils.replace_error("No top right")
-	try bottom_left = map.get(grid, Coor(min_x, max_y)) |> utils.replace_error("No bottom left")
-	try bottom_right = map.get(grid, Coor(max_x, max_y)) |> utils.replace_error("No bottom right")
+	// try corners = get_grid_corners(grid)
 
-	let total = top_left * top_right * bottom_left * bottom_right
+	// let corner_ids = [
+	// 		corners.top_left,
+	// 		corners.top_right,
+	// 		corners.bottom_left,
+	// 		corners.bottom_right
+	// 	]
+	// 	|> list.map(fn(tile: Tile) {
+	// 		tile.id
+	// 	})
 
-	Ok(total)
+	// let total = utils.multiply(corner_ids)
+
+	// Ok(total)
 }
 
-fn place(grid: Grid, tiles: List(Tile)) -> Grid {
+fn generate_edge_map(tiles) {
+	list.fold(
+		over: tiles,
+		from: map.new(),
+		with: fn(tile, acc_tiles) {
+			list.fold(
+				over: rotations,
+				from: acc_tiles,
+				with: fn(rotation, acc_rotation) {
+					list.fold(
+						over: flips,
+						from: acc_rotation,
+						with: fn(flip, acc) {
+							let transformed = tile
+								|> flip_tile(flip)
+								|> rotate_tile(rotation)
+
+							let line = get_line(Top, transformed)
+							let bin = utils.from_binary(line)
+
+							map.update(
+								in: acc,
+								update: bin,
+								with: fn(res) {
+									case res {
+										Error(_) -> [ tile.id ] |> set.from_list
+										Ok(previous) -> set.insert(previous, tile.id)
+									}
+								}
+							)
+						}
+					)
+				}
+			)
+		}
+	)
+}
+
+/////////
+
+fn get_grid_bounds(grid) {
+	let xs = grid |> map.keys |> list.map(get_x)
+	let ys = grid |> map.keys |> list.map(get_y)
+
+	// io.debug(grid)
+	// io.debug(xs)
+	// io.debug(ys)
+
+	Bounds(
+		min_x: utils.min(xs),
+		max_x: utils.max(xs),
+		min_y: utils.min(ys),
+		max_y: utils.max(ys),
+	)
+}
+
+fn get_grid_corners(grid: Grid) -> Result(Corners, String) {
+	let bounds = get_grid_bounds(grid)
+
+	try top_left = map
+		.get(
+			grid,
+			Coor(bounds.min_x, bounds.min_y)
+		)
+		|> utils.replace_error("No top left")
+
+	try top_right = map.get(
+			grid,
+			Coor(bounds.max_x, bounds.min_y)
+		)
+		|> utils.replace_error("No top right")
+
+	try bottom_left = map.get(
+			grid,
+			Coor(bounds.min_x, bounds.max_y)
+		)
+		|> utils.replace_error("No bottom left")
+
+	try bottom_right = map.get(
+			grid,
+			Coor(bounds.max_x, bounds.max_y)
+		)
+		|> utils.replace_error("No bottom right")
+
+	let corners = Corners(
+		top_left: top_left,
+		top_right: top_right,
+		bottom_left: bottom_left,
+		bottom_right: bottom_right,
+	)
+
+	Ok(corners)
+}
+
+fn place_and_rotate(grid: Grid, tiles: List(Tile)) -> Result(Grid, String) {
+	tiles
+	|> list.index_map(fn(ix, tile) {
+		utils.rotate(tiles, ix)
+	})
+	|> list.find_map(fn(ts) {
+		io.debug("Trying new sequence")
+		case place(grid, ts, 0) {
+			Error(e) -> Error(e)
+			Ok(candidate) -> {
+				io.debug("Got candidate")
+				// Must be a rectangle
+				check_is_rectange(candidate)
+			}
+ 		}
+	})
+	|> utils.replace_error("Could not find combination")
+}
+
+fn check_is_rectange(grid: Grid) -> Result(Grid, String) {
+	case get_grid_corners(grid) {
+		Error(e) -> {
+			io.debug("Not a rectangle")
+			Error(e)
+		}
+		Ok(_) -> Ok(grid)
+	}
+}
+
+fn place(
+		grid grid: Grid,
+		tiles tiles: List(Tile),
+		failures failures: Int
+	) -> Result(Grid, String) {
+
+	let maybe_keep_going = case failures > list.length(tiles) {
+		True -> Error("Too many failures")
+		False -> Ok("Keep going")
+	}
+
+	try keep_going = maybe_keep_going
+
 	case tiles {
-		[] -> grid
+		[] -> Ok(grid)
 		[tile, ..remaining_tiles] -> {
 			// If the grid is empty, just put the first tile in 0,0
 			case map.size(grid) == 0 {
 				True -> {
-					io.debug("Placing tile in 0,0")
-					io.debug(tile.id)
+					// io.debug("Placing tile in 0,0")
+					// io.debug(tile.id)
 					let next_grid = map.insert(grid, Coor(0,0), tile)
-					place(next_grid, remaining_tiles)
+					place(next_grid, remaining_tiles, failures: 0)
 				}
 				False -> {
 					// Try to place this tile
@@ -218,14 +367,15 @@ fn place(grid: Grid, tiles: List(Tile)) -> Grid {
 					case try_place_tile(grid, tile) {
 						Ok(next_grid) -> {
 							// io.debug(remaining_tiles |> list.length)
-							place(next_grid, remaining_tiles)
+							place(next_grid, remaining_tiles, failures: 0)
 						}
 						Error(_) -> {
 							// io.debug("Could not place tile")
 							// io.debug(tile.id)
 							place(
 								grid,
-								list.append(remaining_tiles, [tile])
+								list.append(remaining_tiles, [tile]),
+								failures: failures + 1
 							)
 						}
 					}
@@ -298,18 +448,18 @@ fn try_place_tile_relative(
 			|> rotate_tile(rotation)
 			|> flip_tile(flip)
 
-			let reference_line = get_reference_line(direction, reference_tile)
+			let reference_line = get_line(direction, reference_tile)
 			let placement_line = get_placement_line(direction, tile)
 
 			case reference_line == placement_line {
 				True -> {
-					io.debug("    ")
-					io.debug("Tile was placed")
-					io.debug(tile_to_place.id)
-					io.debug(placement_coor)
-					io.debug(direction)
-					io.debug(rotation)
-					io.debug(flip)
+					// io.debug("    ")
+					// io.debug("Tile was placed")
+					// io.debug(tile_to_place.id)
+					// io.debug(placement_coor)
+					// io.debug(direction)
+					// io.debug(rotation)
+					// io.debug(flip)
 					Ok(map.insert(grid, placement_coor, tile))
 				}
 				False -> Error("No match")
@@ -321,21 +471,10 @@ fn try_place_tile_relative(
 fn flip_tile(tile: Tile, flip: Flip) {
 	case flip {
 		FlipNone -> tile
-		FlipH ->
+		Flip ->
 			Tile(
 				id: tile.id,
-				left: tile.right,
-				right: tile.left,
-				top: tile.top |> list.reverse,
-				bottom: tile.bottom |> list.reverse,
-			)
-		FlipV ->
-			Tile(
-				id: tile.id,
-				left: tile.left |> list.reverse,
-				right: tile.right |> list.reverse,
-				top: tile.bottom,
-				bottom: tile.top,
+				lines: tile.lines |> list.reverse,
 			)
 	}
 }
@@ -352,14 +491,25 @@ fn rotate_tile(tile: Tile, rotation: Rotation) {
 fn rotate_90(tile) {
 	Tile(
 		id: tile.id,
-		right: tile.top,
-		bottom: tile.right,
-		left: tile.bottom,
-		top: tile.left,
+		lines: rotate_lines_90(tile.lines)
 	)
 }
 
-fn get_reference_line(direction: Direction, tile: Tile) -> List(Bool) {
+fn rotate_lines_90(lines) {
+	case lines {
+		[] -> []
+		[[], ..rest] -> []
+		_ -> {
+			// last needs to be the last element in the list
+			// init needs to be all elements except the last
+			[
+			list.map(lines, last) , ..(rotate_lines_90(list.map(lines, init)))
+			]
+		}
+	}
+}
+
+fn get_line(direction: Direction, tile: Tile) -> List(Bool) {
 	case direction {
 		Top -> tile.top
 		Bottom -> tile.bottom
@@ -369,7 +519,7 @@ fn get_reference_line(direction: Direction, tile: Tile) -> List(Bool) {
 }
 
 fn get_placement_line(direction, tile) {
-	get_reference_line(direction |> opposite_direction, tile)
+	get_line(direction |> opposite_direction, tile)
 }
 
 fn opposite_direction(direction) {

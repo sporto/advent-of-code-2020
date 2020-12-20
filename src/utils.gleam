@@ -198,3 +198,9 @@ pub fn permutations(l: List(a)) -> List(List(a)) {
 		}
 	}
 }
+
+pub fn rotate(l: List(a), at: Int) -> List(a) {
+	let start = list.take(l, at)
+	let end = list.drop(l, at)
+	list.append(end, start)
+}

@@ -61,3 +61,17 @@ pub fn permutations_test() {
 	utils.permutations([1, 2, 3])
 	|> should.equal(expected)
 }
+
+pub fn rotate_test() {
+	[1,2,3,4]
+	|> utils.rotate(1)
+	|> should.equal([2,3,4,1])
+
+	[1,2,3,4]
+	|> utils.rotate(2)
+	|> should.equal([3,4,1,2])
+
+	[1,2,3,4]
+	|> utils.rotate(5)
+	|> should.equal([1,2,3,4])
+}
