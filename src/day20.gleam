@@ -8,6 +8,7 @@ import gleam/pair
 import gleam/map.{Map}
 
 const sample = "data/20/sample.txt"
+const input = "data/20/input.txt"
 
 pub type TileLine = List(Bool)
 
@@ -57,13 +58,14 @@ pub type Rotation{
 }
 
 pub type Flip{
+	FlipNone
 	FlipH
 	FlipV
 }
 
 const directions = [ Top, Bottom, Left, Right ]
 const rotations = [ R0, R90, R180, R270 ]
-const flips = [ FlipH, FlipV ]
+const flips = [ FlipNone, FlipH, FlipV ]
 
 pub fn read(file: String) -> Result(List(Tile), String) {
 	utils.read_file(file)
@@ -162,7 +164,18 @@ fn bottom_hash(lines) {
 pub fn part1_sample() {
 	try tiles = read(sample)
 
-	let grid = part1(tiles)
+	part1(tiles)
+}
+
+pub fn part1_main() {
+	try tiles = read(input)
+
+	part1(tiles)
+}
+
+fn part1(tiles: List(Tile)) -> Result(Int, String) {
+
+	let grid = place(map.new(), tiles)
 	|> map.map_values(fn(k, tile: Tile) {
 		tile.id
 	})
@@ -187,11 +200,6 @@ pub fn part1_sample() {
 	Ok(total)
 }
 
-fn part1(tiles: List(Tile)) -> Grid {
-	// io.debug(tiles |> list.length)
-	place(map.new(), tiles)
-}
-
 fn place(grid: Grid, tiles: List(Tile)) -> Grid {
 	case tiles {
 		[] -> grid
@@ -199,8 +207,8 @@ fn place(grid: Grid, tiles: List(Tile)) -> Grid {
 			// If the grid is empty, just put the first tile in 0,0
 			case map.size(grid) == 0 {
 				True -> {
-					// io.debug("Placing tile in 0,0")
-					// io.debug(tile.id)
+					io.debug("Placing tile in 0,0")
+					io.debug(tile.id)
 					let next_grid = map.insert(grid, Coor(0,0), tile)
 					place(next_grid, remaining_tiles)
 				}
@@ -209,8 +217,6 @@ fn place(grid: Grid, tiles: List(Tile)) -> Grid {
 					// Otherwise place at the end and continue
 					case try_place_tile(grid, tile) {
 						Ok(next_grid) -> {
-							// io.debug("Tile was placed")
-							// io.debug(tile.id)
 							// io.debug(remaining_tiles |> list.length)
 							place(next_grid, remaining_tiles)
 						}
@@ -289,14 +295,21 @@ fn try_place_tile_relative(
 		True -> Error("Coor already taken")
 		False -> {
 			let tile = tile_to_place
-			|> flip_tile(flip)
 			|> rotate_tile(rotation)
+			|> flip_tile(flip)
 
 			let reference_line = get_reference_line(direction, reference_tile)
 			let placement_line = get_placement_line(direction, tile)
 
 			case reference_line == placement_line {
 				True -> {
+					io.debug("    ")
+					io.debug("Tile was placed")
+					io.debug(tile_to_place.id)
+					io.debug(placement_coor)
+					io.debug(direction)
+					io.debug(rotation)
+					io.debug(flip)
 					Ok(map.insert(grid, placement_coor, tile))
 				}
 				False -> Error("No match")
@@ -307,6 +320,7 @@ fn try_place_tile_relative(
 
 fn flip_tile(tile: Tile, flip: Flip) {
 	case flip {
+		FlipNone -> tile
 		FlipH ->
 			Tile(
 				id: tile.id,
@@ -371,8 +385,8 @@ fn relative_coor(direction: Direction, coor: Coor) {
 	let Coor(x,y) = coor
 
 	case direction {
-		Top -> Coor(x, y - 1)
-		Bottom -> Coor(x, y + 1)
+		Top -> Coor(x, y + 1)
+		Bottom -> Coor(x, y - 1)
 		Left -> Coor(x - 1, y)
 		Right -> Coor(x + 1, y)
 	}
