@@ -204,3 +204,31 @@ pub fn rotate(l: List(a), at: Int) -> List(a) {
 	let end = list.drop(l, at)
 	list.append(end, start)
 }
+
+pub fn rotate_matrix_90(lines: List(List(a))) -> List(List(a)) {
+	// List.foldl (List.map2 (::)) (List.repeat (rowsLength listOfLists) []) listOfLists
+
+	let row_len = lines |> list.head |> result.unwrap([]) |> list.length
+	let from = list.repeat([], row_len)
+
+	list.fold(
+		over: lines,
+		from: from,
+		with: fn(sub, acc) {
+			map2(
+				fn(a, b) {
+					list.append([a], b)
+				},
+				sub,
+				acc
+			)
+		})
+}
+
+fn map2(fun: fn(a, b) -> c, aa: List(a), bb: List(b)) -> List(c) {
+	list.zip(aa, bb)
+	|> list.map(fn(t) {
+		let tuple(a, b) = t
+		fun(a, b)
+	})
+}

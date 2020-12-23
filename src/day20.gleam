@@ -146,36 +146,29 @@ pub fn part1_main() {
 }
 
 fn part1(tiles: List(Tile)) -> Result(Int, String) {
-	tiles
-	|> list.map(fn(tile: Tile) {
-		io.debug(tile.id)
-		io.debug(tile.lines)
-		// io.debug(tile.bottom)
-	})
+	// generate_edge_map(tiles)
+	// |> map.map_values(fn(k, v) { set.to_list(v) })
+	// |> io.debug
 
-	generate_edge_map(tiles)
-	|> map.map_values(fn(k, v) { set.to_list(v) })
-	|> io.debug
+	// Ok(0)
 
-	Ok(0)
+	try grid = place(map.new(), tiles, 0)
 
-	// try grid = place_and_rotate(map.new(), tiles)
+	try corners = get_grid_corners(grid)
 
-	// try corners = get_grid_corners(grid)
+	let corner_ids = [
+			corners.top_left,
+			corners.top_right,
+			corners.bottom_left,
+			corners.bottom_right
+		]
+		|> list.map(fn(tile: Tile) {
+			tile.id
+		})
 
-	// let corner_ids = [
-	// 		corners.top_left,
-	// 		corners.top_right,
-	// 		corners.bottom_left,
-	// 		corners.bottom_right
-	// 	]
-	// 	|> list.map(fn(tile: Tile) {
-	// 		tile.id
-	// 	})
+	let total = utils.multiply(corner_ids)
 
-	// let total = utils.multiply(corner_ids)
-
-	// Ok(total)
+	Ok(total)
 }
 
 fn generate_edge_map(tiles) {
@@ -196,11 +189,11 @@ fn generate_edge_map(tiles) {
 								|> rotate_tile(rotation)
 
 							let line = get_line(Top, transformed)
-							let bin = utils.from_binary(line)
+							// let bin = utils.from_binary(line)
 
 							map.update(
 								in: acc,
-								update: bin,
+								update: line,
 								with: fn(res) {
 									case res {
 										Error(_) -> [ tile.id ] |> set.from_list
@@ -270,35 +263,6 @@ fn get_grid_corners(grid: Grid) -> Result(Corners, String) {
 	)
 
 	Ok(corners)
-}
-
-fn place_and_rotate(grid: Grid, tiles: List(Tile)) -> Result(Grid, String) {
-	tiles
-	|> list.index_map(fn(ix, tile) {
-		utils.rotate(tiles, ix)
-	})
-	|> list.find_map(fn(ts) {
-		io.debug("Trying new sequence")
-		case place(grid, ts, 0) {
-			Error(e) -> Error(e)
-			Ok(candidate) -> {
-				io.debug("Got candidate")
-				// Must be a rectangle
-				check_is_rectange(candidate)
-			}
- 		}
-	})
-	|> utils.replace_error("Could not find combination")
-}
-
-fn check_is_rectange(grid: Grid) -> Result(Grid, String) {
-	case get_grid_corners(grid) {
-		Error(e) -> {
-			io.debug("Not a rectangle")
-			Error(e)
-		}
-		Ok(_) -> Ok(grid)
-	}
 }
 
 fn place(
@@ -455,36 +419,8 @@ fn rotate_tile(tile: Tile, rotation: Rotation) {
 fn rotate_90(tile) {
 	Tile(
 		id: tile.id,
-		lines: rotate_lines_90(tile.lines)
+		lines: utils.rotate_matrix_90(tile.lines)
 	)
-}
-
-fn rotate_lines_90(lines) {
-	// List.foldl (List.map2 (::)) (List.repeat (rowsLength listOfLists) []) listOfLists
-
-	let row_len = lines |> list.head |> result.unwrap([]) |> list.length
-	let from = list.repeat([], row_len)
-
-	list.fold(
-		over: lines,
-		from: from,
-		with: fn(sub, acc) {
-			map2(
-				fn(a, b) {
-					list.append([a], b)
-				},
-				sub,
-				acc
-			)
-		})
-}
-
-fn map2(fun: fn(a, b) -> c, aa: List(a), bb: List(b)) -> List(c) {
-	list.zip(aa, bb)
-	|> list.map(fn(t) {
-		let tuple(a, b) = t
-		fun(a, b)
-	})
 }
 
 fn get_line(direction: Direction, tile: Tile) -> List(Bool) {

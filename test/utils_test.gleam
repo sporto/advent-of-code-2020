@@ -75,3 +75,20 @@ pub fn rotate_test() {
 	|> utils.rotate(5)
 	|> should.equal([1,2,3,4])
 }
+
+pub fn rotate_matrix_90_test() {
+	let matrix = [
+		[1,2,3],
+		[4,5,6],
+		[7,8,9]
+	]
+
+	let expected = [
+		[7,4,1],
+		[8,5,2],
+		[9,6,3]
+	]
+
+	utils.rotate_matrix_90(matrix)
+	|> should.equal(expected)
+}
