@@ -145,6 +145,12 @@ pub fn part1_main() {
 	part1(tiles)
 }
 
+pub fn part2_sample() {
+	try tiles = read(sample)
+
+	part2(tiles)
+}
+
 fn part1(tiles: List(Tile)) -> Result(Int, String) {
 	// generate_edge_map(tiles)
 	// |> map.map_values(fn(k, v) { set.to_list(v) })
@@ -169,6 +175,18 @@ fn part1(tiles: List(Tile)) -> Result(Int, String) {
 	let total = utils.multiply(corner_ids)
 
 	Ok(total)
+}
+
+fn part2(tiles) {
+	try grid = place(map.new(), tiles, 0)
+
+	let stiched = grid
+	|> map.map_values(fn(k,v) { remove_borders(v) })
+	|> stitch
+
+	print_matrix(stiched) |> io.debug
+
+	Ok(0)
 }
 
 fn generate_edge_map(tiles) {
@@ -478,5 +496,90 @@ fn relative_coor(direction: Direction, coor: Coor) {
 		Bottom -> Coor(x, y - 1)
 		Left -> Coor(x - 1, y)
 		Right -> Coor(x + 1, y)
+	}
+}
+
+fn remove_borders(tile: Tile) -> Tile {
+	Tile(..tile, lines: remove_matrix_borders(tile.lines))
+}
+
+pub fn remove_matrix_borders(lines: List(List(a))) -> List(List(a)) {
+	lines
+	|> list.map(list.drop(_, 1))
+	|> list.map(list.reverse)
+	|> list.map(list.drop(_, 1))
+	|> list.map(list.reverse)
+	|> list.drop(1)
+	|> list.reverse
+	|> list.drop(1)
+	|> list.reverse
+}
+
+fn stitch(grid: Grid) {
+	// let bounds = get_grid_bounds(grid)
+
+	// let x_range = list.range(bounds.min_x, bounds.max_x + 1)
+	// let y_range = list.range(bounds.min_y, bounds.max_y + 1)
+
+	map.fold(
+		over: grid,
+		from: map.new(),
+		with: fn(tile_coor: Coor, tile: Tile, acc1) {
+			let tile_map = lines_to_map(tile.lines)
+			let size = list.length(tile.lines)
+			map.fold(
+				over: tile_map,
+				from: acc1,
+				with: fn(cell_coor: Coor, cell, acc) {
+					let coor = Coor(
+						tile_coor.x * size + cell_coor.x,
+						tile_coor.y * size + cell_coor.y
+					)
+					map.insert(acc, coor, cell)
+				}
+			)
+		}
+	)
+}
+
+pub fn lines_to_map(lines: List(List(a))) -> Map(Coor, a) {
+	lines
+	|> utils.index_fold(
+		from: map.new(),
+		with: fn(row_ix, row, acc_row) {
+			row
+			|> utils.index_fold(
+				from: acc_row,
+				with: fn(col_ix, cell, acc) {
+					let coor = Coor(col_ix, row_ix * -1)
+					map.insert(acc, coor, cell)
+				}
+			)
+		}
+	)
+}
+
+fn print_matrix(grid) {
+
+	let bounds = get_grid_bounds(grid)
+	let x_range = list.range(bounds.min_x, bounds.max_x + 1)
+	let y_range = list.range(bounds.min_y, bounds.max_y + 1)
+
+	list.map(y_range, fn(y) {
+		list.map(x_range, fn(x) {
+			let coor = Coor(x, y)
+			map.get(grid, coor)
+			|> result.unwrap(False)
+			|> cell_to_string
+		})
+		|> string.join("")
+	})
+	|> string.join("\n")
+}
+
+fn cell_to_string(cell: Bool) {
+	case cell {
+		True -> "#"
+		False -> "."
 	}
 }

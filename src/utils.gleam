@@ -225,10 +225,24 @@ pub fn rotate_matrix_90(lines: List(List(a))) -> List(List(a)) {
 		})
 }
 
-fn map2(fun: fn(a, b) -> c, aa: List(a), bb: List(b)) -> List(c) {
+pub fn map2(fun: fn(a, b) -> c, aa: List(a), bb: List(b)) -> List(c) {
 	list.zip(aa, bb)
 	|> list.map(fn(t) {
 		let tuple(a, b) = t
 		fun(a, b)
 	})
+}
+
+pub fn index_fold(over over, from from, with fun) {
+	over
+	|> list.index_map(fn(ix, value) {
+		tuple(ix, value)
+	})
+	|> list.fold(
+		from: from,
+		with: fn(t, acc) {
+			let tuple(ix, val) = t
+			fun(ix, val, acc)
+		}
+	)
 }
