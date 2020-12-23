@@ -79,7 +79,6 @@ pub fn read(file: String) -> Result(List(Tile), String) {
 	utils.read_file(file)
 	|> utils.replace_error("Could not read file")
 	|> result.then(parse_input)
-	|> result.map(list.map(_, to_tile_info))
 }
 
 fn parse_input(file: String) -> Result(List(Tile), String) {
@@ -132,41 +131,6 @@ fn parse_char(input) {
 	}
 }
 
-fn to_tile_info(tile: Tile) -> Tile {
-	Tile(
-		id: tile.id,
-		left: left_hash(tile.lines),
-		right: right_hash(tile.lines),
-		top: top_hash(tile.lines),
-		bottom: bottom_hash(tile.lines),
-	)
-}
-
-pub fn left_hash(lines) {
-	lines
-	|> list.map(list.head)
-	|> result.all
-	|> result.unwrap([])
-}
-
-pub fn right_hash(lines) {
-	lines
-	|> list.map(list.reverse)
-	|> left_hash
-}
-
-pub fn top_hash(lines) {
-	lines
-	|> list.head
-	|> result.unwrap([])
-}
-
-pub fn bottom_hash(lines) {
-	lines
-	|> list.reverse
-	|> top_hash
-}
-
 // Entry
 
 pub fn part1_sample() {
@@ -185,7 +149,7 @@ fn part1(tiles: List(Tile)) -> Result(Int, String) {
 	tiles
 	|> list.map(fn(tile: Tile) {
 		io.debug(tile.id)
-		io.debug(tile.left)
+		io.debug(tile.lines)
 		// io.debug(tile.bottom)
 	})
 
@@ -496,26 +460,65 @@ fn rotate_90(tile) {
 }
 
 fn rotate_lines_90(lines) {
-	case lines {
-		[] -> []
-		[[], ..rest] -> []
-		_ -> {
-			// last needs to be the last element in the list
-			// init needs to be all elements except the last
-			[
-			list.map(lines, last) , ..(rotate_lines_90(list.map(lines, init)))
-			]
-		}
-	}
+	// List.foldl (List.map2 (::)) (List.repeat (rowsLength listOfLists) []) listOfLists
+
+	let row_len = lines |> list.head |> result.unwrap([]) |> list.length
+	let from = list.repeat([], row_len)
+
+	list.fold(
+		over: lines,
+		from: from,
+		with: fn(sub, acc) {
+			map2(
+				fn(a, b) {
+					list.append([a], b)
+				},
+				sub,
+				acc
+			)
+		})
+}
+
+fn map2(fun: fn(a, b) -> c, aa: List(a), bb: List(b)) -> List(c) {
+	list.zip(aa, bb)
+	|> list.map(fn(t) {
+		let tuple(a, b) = t
+		fun(a, b)
+	})
 }
 
 fn get_line(direction: Direction, tile: Tile) -> List(Bool) {
 	case direction {
-		Top -> tile.top
-		Bottom -> tile.bottom
-		Left -> tile.left
-		Right -> tile.right
+		Top -> get_top_line(tile.lines)
+		Bottom -> get_bottom_line(tile.lines)
+		Left -> get_left_line(tile.lines)
+		Right -> get_rigth_line(tile.lines)
 	}
+}
+
+pub fn get_left_line(lines) {
+	lines
+	|> list.map(list.head)
+	|> result.all
+	|> result.unwrap([])
+}
+
+pub fn get_rigth_line(lines) {
+	lines
+	|> list.map(list.reverse)
+	|> get_left_line
+}
+
+pub fn get_top_line(lines) {
+	lines
+	|> list.head
+	|> result.unwrap([])
+}
+
+pub fn get_bottom_line(lines) {
+	lines
+	|> list.reverse
+	|> get_top_line
 }
 
 fn get_placement_line(direction, tile) {
