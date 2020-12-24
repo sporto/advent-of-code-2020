@@ -6,6 +6,7 @@ import gleam/string
 import gleam/set
 import gleam/io
 import gleam/pair
+import gleam/function
 import gleam/map.{Map}
 
 const sample = "data/20/sample.txt"
@@ -184,9 +185,11 @@ fn part2(tiles) {
 	|> map.map_values(fn(k,v) { remove_borders(v) })
 	|> stitch
 
-	print_matrix(stiched) |> io.debug
+	// print_matrix(stiched) |> io.debug
 
-	Ok(0)
+	stiched
+	|> find_sea_monsters
+	|> utils.replace_error("Nothing found")
 }
 
 fn generate_edge_map(tiles) {
@@ -415,30 +418,37 @@ fn try_place_tile_relative(
 }
 
 fn flip_tile(tile: Tile, flip: Flip) {
+	Tile(
+		..tile,
+		lines: flip_lines(tile.lines, flip)
+	)
+}
+
+fn flip_lines(lines, flip) {
 	case flip {
-		FlipNone -> tile
-		Flip ->
-			Tile(
-				id: tile.id,
-				lines: tile.lines |> list.reverse,
-			)
+		FlipNone -> lines
+		Flip -> lines |> list.reverse
 	}
 }
 
 fn rotate_tile(tile: Tile, rotation: Rotation) {
+	Tile(
+		..tile,
+		lines: rotate_lines(tile.lines, rotation)
+	)
+}
+
+fn rotate_lines(lines, rotation) {
 	case rotation {
-		R0 -> tile
-		R90 -> tile |> rotate_90
-		R180 -> tile |> rotate_90 |> rotate_90
-		R270 -> tile |> rotate_90 |> rotate_90 |> rotate_90
+		R0 -> lines
+		R90 -> lines |> rotate_90
+		R180 -> lines |> rotate_90 |> rotate_90
+		R270 -> lines |> rotate_90 |> rotate_90 |> rotate_90
 	}
 }
 
-fn rotate_90(tile) {
-	Tile(
-		id: tile.id,
-		lines: utils.rotate_matrix_90(tile.lines)
-	)
+fn rotate_90(lines) {
+	utils.rotate_matrix_90(lines)
 }
 
 fn get_line(direction: Direction, tile: Tile) -> List(Bool) {
@@ -515,7 +525,7 @@ pub fn remove_matrix_borders(lines: List(List(a))) -> List(List(a)) {
 	|> list.reverse
 }
 
-fn stitch(grid: Grid) {
+fn stitch(grid: Grid) -> Map(Coor, Bool) {
 	// let bounds = get_grid_bounds(grid)
 
 	// let x_range = list.range(bounds.min_x, bounds.max_x + 1)
@@ -559,7 +569,7 @@ pub fn lines_to_map(lines: List(List(a))) -> Map(Coor, a) {
 	)
 }
 
-fn print_matrix(grid) {
+fn print_matrix(grid: Map(Coor, Bool)) {
 
 	let bounds = get_grid_bounds(grid)
 	let x_range = list.range(bounds.min_x, bounds.max_x + 1)
@@ -582,4 +592,153 @@ fn cell_to_string(cell: Bool) {
 		True -> "#"
 		False -> "."
 	}
+}
+
+fn find_sea_monsters(grid: Map(Coor, Bool)) -> Result(Int, Nil) {
+	let mask = parse_mask()
+	let rows = grid_to_rows(grid)
+
+	// need to rotate and flip
+	list.find_map(
+		rotations,
+		fn(rotation) {
+			list.find_map(
+				flips,
+				fn(flip) {
+					find_sea_monsters_for_transform(rows, mask, rotation, flip)
+				}
+			)
+		}
+	)
+}
+
+fn find_sea_monsters_for_transform(rows, mask, rotation, flip) {
+	let new_rows = rows
+	|> flip_lines(flip)
+	|> rotate_lines(rotation)
+
+	find_sea_monsters_in_matrix(new_rows, mask)
+}
+
+fn find_sea_monsters_in_matrix(rows: List(List(Bool)), mask) -> Result(Int, Nil) {
+	let count = list.index_map(rows, fn(row_ix, row: List(Bool)) {
+		list.index_map(row, fn(col_ix, _) {
+			find_sea_monsters_from(rows, mask, col_ix, row_ix)
+		})
+	})
+	|> list.flatten
+	|> list.filter_map(function.identity)
+	|> utils.sum
+
+	case count > 0 {
+		True -> Ok(count)
+		False -> Error(Nil)
+	}
+}
+
+fn grid_to_rows(grid: Map(Coor, Bool)) -> List(List(Bool)) {
+	let bounds = get_grid_bounds(grid)
+	let x_range = list.range(bounds.min_x, bounds.max_x + 1)
+	let y_range = list.range(bounds.min_y, bounds.max_y + 1)
+
+	list.map(y_range, fn(y) {
+		list.map(x_range, fn(x) {
+			let coor = Coor(x, y)
+			map.get(grid, coor)
+			|> result.unwrap(False)
+		})
+	})
+}
+
+type Mask{
+	Ign
+	Hit
+}
+
+const sea_monster_mask = [
+	"                  # ",
+	"#    ##    ##    ###",
+	" #  #  #  #  #  #   ",
+]
+
+fn parse_mask() {
+	sea_monster_mask
+	|> list.map(parse_mask_line)
+}
+
+fn parse_mask_line(line) {
+	line
+	|> string.to_graphemes
+	|> list.map(parse_mask_char)
+}
+
+fn parse_mask_char(c) {
+	case c {
+		"#" -> Hit
+		_ -> Ign
+	}
+}
+
+fn find_sea_monsters_from(rows: List(List(Bool)), mask: List(List(Mask)), col_ix: Int, row_ix: Int) -> Result(Int, Nil) {
+	try area = get_area(rows, mask, col_ix, row_ix)
+
+	// let discard = case row_ix == 2 {
+	// 	True -> {
+	// 		case col_ix == 2 {
+	// 			True -> io.debug(area)
+	// 			False ->[]
+	// 		}
+	// 	}
+	// 	False -> []
+	// }
+
+	let res = apply_mask(area, mask)
+	|> list.all(list.all(_, fn(cell) { cell == True }))
+
+	case res {
+		True -> Ok(1)
+		False -> Error(Nil)
+	}
+}
+
+fn get_area(rows, mask, col_ix, row_ix) {
+	let mask_len = mask |> list.head |> result.unwrap([]) |> list.length
+
+	let area = rows
+	|> list.drop(row_ix)
+	|> list.take(3)
+	|> list.map(fn(row) {
+		row
+		|> list.drop(col_ix)
+		|> list.take(mask_len)
+	})
+
+	let has_3_rows = area |> list.length == 3
+	let has_x_len = area |> list.head |> result.unwrap([]) |> list.length == mask_len
+
+	case has_3_rows, has_x_len {
+		True, True -> Ok(area)
+		_, _ -> Error(Nil)
+	}
+}
+
+fn apply_mask(rows: List(List(Bool)), mask: List(List(Mask))) -> List(List(Bool)) {
+	list.zip(rows, mask)
+	|> list.map(fn(row_tuple) {
+		let tuple(row, row_mask) = row_tuple
+
+		list.zip(row, row_mask)
+		|> list.map(fn(cell_tuple) {
+			let tuple(cell, cell_mask) = cell_tuple
+			case cell_mask {
+				Ign -> True
+				Hit -> {
+					case cell {
+						True -> True
+						False -> False
+					}
+				}
+			}
+		})
+	})
 }
