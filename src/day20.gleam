@@ -5,6 +5,7 @@ import gleam/int
 import gleam/string
 import gleam/set
 import gleam/io
+import gleam/bool
 import gleam/pair
 import gleam/function
 import gleam/map.{Map}
@@ -151,6 +152,13 @@ pub fn part2_sample() {
 
 	part2(tiles)
 }
+
+pub fn part2_main() {
+	try tiles = read(input)
+
+	part2(tiles)
+}
+
 
 fn part1(tiles: List(Tile)) -> Result(Int, String) {
 	// generate_edge_map(tiles)
@@ -631,7 +639,11 @@ fn find_sea_monsters_in_matrix(rows: List(List(Bool)), mask) -> Result(Int, Nil)
 	|> utils.sum
 
 	case count > 0 {
-		True -> Ok(count)
+		True -> {
+			let true_cells = count_true_cells(rows)
+			let cells_in_seamonsters = count_true_cells(mask) * count
+			Ok(true_cells - cells_in_seamonsters)
+		}
 		False -> Error(Nil)
 	}
 }
@@ -648,11 +660,6 @@ fn grid_to_rows(grid: Map(Coor, Bool)) -> List(List(Bool)) {
 			|> result.unwrap(False)
 		})
 	})
-}
-
-type Mask{
-	Ign
-	Hit
 }
 
 const sea_monster_mask = [
@@ -674,12 +681,12 @@ fn parse_mask_line(line) {
 
 fn parse_mask_char(c) {
 	case c {
-		"#" -> Hit
-		_ -> Ign
+		"#" -> True
+		_ -> False
 	}
 }
 
-fn find_sea_monsters_from(rows: List(List(Bool)), mask: List(List(Mask)), col_ix: Int, row_ix: Int) -> Result(Int, Nil) {
+fn find_sea_monsters_from(rows: List(List(Bool)), mask: List(List(Bool)), col_ix: Int, row_ix: Int) -> Result(Int, Nil) {
 	try area = get_area(rows, mask, col_ix, row_ix)
 
 	// let discard = case row_ix == 2 {
@@ -722,7 +729,7 @@ fn get_area(rows, mask, col_ix, row_ix) {
 	}
 }
 
-fn apply_mask(rows: List(List(Bool)), mask: List(List(Mask))) -> List(List(Bool)) {
+fn apply_mask(rows: List(List(Bool)), mask: List(List(Bool))) -> List(List(Bool)) {
 	list.zip(rows, mask)
 	|> list.map(fn(row_tuple) {
 		let tuple(row, row_mask) = row_tuple
@@ -731,8 +738,8 @@ fn apply_mask(rows: List(List(Bool)), mask: List(List(Mask))) -> List(List(Bool)
 		|> list.map(fn(cell_tuple) {
 			let tuple(cell, cell_mask) = cell_tuple
 			case cell_mask {
-				Ign -> True
-				Hit -> {
+				False -> True
+				True -> {
 					case cell {
 						True -> True
 						False -> False
@@ -741,4 +748,12 @@ fn apply_mask(rows: List(List(Bool)), mask: List(List(Mask))) -> List(List(Bool)
 			}
 		})
 	})
+}
+
+fn count_true_cells(rows: List(List(Bool))) -> Int {
+	list.map(rows, fn(row) {
+		list.map(row, bool.to_int)
+	})
+	|> list.flatten
+	|> utils.sum
 }

@@ -14,7 +14,12 @@ pub fn part1_sample_test() {
 
 pub fn part2_sample_test() {
 	day20.part2_sample()
-	|> should.equal(Ok(1))
+	|> should.equal(Ok(273))
+}
+
+pub fn part2_main_test() {
+	day20.part2_main()
+	|> should.equal(Ok(2118))
 }
 
 pub fn remove_matrix_borders_test() {
