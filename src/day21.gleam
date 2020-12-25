@@ -42,15 +42,19 @@ pub fn part1_sample() {
 	|> result.map(part_1)
 }
 
-fn part_1(lines) {
-	io.debug("---allergens---")
+pub fn part1_main() {
+	read(input)
+	|> result.map(part_1)
+}
 
+fn part_1(lines) {
 	let table = lines
 	|> compare_lines(map.new(), compare_common)
 	|> check_if_lines_have_one(lines)
-	// |> io.debug
+	|> io.debug
 
 	let all_ingredients = get_all_ingredients(lines)
+	// io.debug(all_ingredients)
 
 	let bad_ingredients = table |> map.keys |> set.from_list
 
@@ -130,11 +134,17 @@ fn compare_common(
 		)
 		|> set.to_list
 
+	io.debug("common_ingredients")
+	io.debug(common_ingredients)
+
 	let common_allergens = set.intersection(
 		line1b.allergens,
 		line2b.allergens
 		)
 		|> set.to_list
+
+	io.debug("common_allergens")
+	io.debug(common_allergens)
 
 	case common_ingredients {
 		[ingredient] -> {
