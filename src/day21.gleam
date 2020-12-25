@@ -45,12 +45,26 @@ pub fn part1_sample() {
 fn part_1(lines) {
 	io.debug("---allergens---")
 
-	compare_lines(lines)
-	|> io.debug
-
-	// let mm = lines
-	// |> make_map_by_allergen
+	let table = lines
+	|> compare_lines(map.new(), compare_common)
+	|> check_if_lines_have_one(lines)
 	// |> io.debug
+
+	let all_ingredients = get_all_ingredients(lines)
+
+	let bad_ingredients = table |> map.keys |> set.from_list
+
+	// io.debug(bad_ingredients)
+
+	let good_ingredients = set.fold(
+		over: bad_ingredients,
+		from: all_ingredients,
+		with: fn(bad, acc) {
+			set.delete(acc, bad)
+		}
+	)
+
+	io.debug(good_ingredients |> set.to_list)
 
 	// io.debug("---ingredients---")
 
@@ -61,10 +75,19 @@ fn part_1(lines) {
 	1
 }
 
-fn compare_lines(lines: List(InputLine)) -> Map(String, String) {
+fn get_all_ingredients(lines) -> Set(String) {
+	lines
+	|> list.map(fn(l: InputLine) { l.ingredients })
+	|> list.fold(
+		from: set.new(),
+		with: set.union
+	)
+}
+
+fn compare_lines(lines: List(InputLine), table, compare_fn) -> Map(String, String) {
 	lines
 	|> list.fold(
-		from: map.new(),
+		from: table,
 		with: fn(line1, acc1: Map(String, String)) {
 			lines
 			|> list.fold(
@@ -73,10 +96,7 @@ fn compare_lines(lines: List(InputLine)) -> Map(String, String) {
 					case line1 == line2 {
 						True -> acc
 						False -> {
-							case compare(acc, line1, line2) {
-								Error(_) -> acc
-								Ok(next_acc) -> next_acc
-							}
+							compare_fn(acc, line1, line2)
 						}
 					}
 				}
@@ -85,11 +105,11 @@ fn compare_lines(lines: List(InputLine)) -> Map(String, String) {
 	)
 }
 
-fn compare(
+fn compare_common(
 		table: Map(String, String),
 		line1: InputLine,
 		line2: InputLine
-	) ->  Result(Map(String, String), String) {
+	) ->  Map(String, String) {
 
 	// Remove the know ingredients and allergens
 	let line1b = remove(table, line1)
@@ -113,14 +133,12 @@ fn compare(
 		[ingredient] -> {
 			case common_allergens {
 				[allergen] -> {
-					let next_table = map.insert(table, ingredient, allergen)
-
-					Ok(next_table)
+					map.insert(table, ingredient, allergen)
 				}
-				_ -> Error("No match")
+				_ -> table
 			}
 		}
-		_ -> Error("No match")
+		_ -> table
 	}
 }
 
@@ -135,6 +153,32 @@ fn remove(table: Map(String, String), line: InputLine) -> InputLine {
 			)
 		}
 	)
+}
+
+fn check_if_lines_have_one(table: Map(String, String), lines: List(InputLine)) -> Map(String, String) {
+	lines
+	|> list.fold(
+		from: table,
+		with: fn(line, acc) {
+			check_if_lines_has_one(acc, line)
+		}
+	)
+}
+
+fn check_if_lines_has_one(table, line) {
+	let lineb = remove(table, line)
+	// if the line has one ingredient and one allergen then join
+	case lineb.ingredients |> set.to_list {
+		[ingredient] -> {
+			case lineb.allergens |> set.to_list {
+				[allergen] -> {
+					map.insert(table, ingredient, allergen)
+				}
+				_ -> table
+			}
+		}
+		_ -> table
+	}
 }
 
 fn make_map_by_allergen(lines) -> Map(String, Set(String)) {
