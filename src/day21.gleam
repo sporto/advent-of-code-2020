@@ -47,6 +47,16 @@ pub fn part1_main() {
 	|> result.map(part_1)
 }
 
+pub fn part2_sample() {
+	read(sample)
+	|> result.map(part_2)
+}
+
+pub fn part2_main() {
+	read(input)
+	|> result.map(part_2)
+}
+
 fn part_1(lines) {
 	let all_ingredients = get_all_ingredients(lines)
 
@@ -78,6 +88,24 @@ fn part_1(lines) {
 	) |> utils.sum
 
 	count
+}
+
+
+fn part_2(lines) {
+	// let all_ingredients = get_all_ingredients(lines)
+
+	let table = lines
+	|> build_sets
+	|> extract_singles(_, map.new(), 0)
+	// |> io.debug
+
+	table
+	|> map.to_list
+	|> list.sort(fn(a, b) {
+		string.compare(pair.first(a), pair.first(b))
+	})
+	|> list.map(pair.second)
+	|> string.join(",")
 }
 
 fn get_all_ingredients(lines) -> Set(String) {
