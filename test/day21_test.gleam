@@ -3,5 +3,5 @@ import gleam/should
 
 pub fn part1_sample_test() {
 	day21.part1_sample()
-	|> should.equal(Ok(0))
+	|> should.equal(Ok(5))
 }

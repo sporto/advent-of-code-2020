@@ -64,7 +64,14 @@ fn part_1(lines) {
 		}
 	)
 
-	io.debug(good_ingredients |> set.to_list)
+	// io.debug(good_ingredients |> set.to_list)
+
+	let count = lines
+	|> list.map(
+		fn(line: InputLine) {
+			set.intersection(line.ingredients, good_ingredients) |> set.size
+		}
+	) |> utils.sum
 
 	// io.debug("---ingredients---")
 
@@ -72,7 +79,7 @@ fn part_1(lines) {
 	// |> make_map_by_ingredient
 	// |> io.debug
 
-	1
+	count
 }
 
 fn get_all_ingredients(lines) -> Set(String) {
