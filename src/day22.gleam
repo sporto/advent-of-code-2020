@@ -36,6 +36,10 @@ pub fn part1_sample() {
 	part1(sample1, sample2)
 }
 
+pub fn part1_main() {
+	part1(player1, player2)
+}
+
 fn part1(file1, file2) {
 	try deck1 = read(file1)
 	try deck2 = read(file2)
