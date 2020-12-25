@@ -48,15 +48,17 @@ pub fn part1_main() {
 }
 
 fn part_1(lines) {
-	let table = lines
-	|> compare_lines(map.new(), compare_common)
-	|> check_if_lines_have_one(lines)
-	|> io.debug
-
 	let all_ingredients = get_all_ingredients(lines)
+
+	let table = lines
+	|> build_sets
+	// |> io.debug
+	|> extract_singles(_, map.new(), 0)
+	// |> io.debug
+
 	// io.debug(all_ingredients)
 
-	let bad_ingredients = table |> map.keys |> set.from_list
+	let bad_ingredients = table |> map.values |> set.from_list
 
 	// io.debug(bad_ingredients)
 
@@ -68,20 +70,12 @@ fn part_1(lines) {
 		}
 	)
 
-	// io.debug(good_ingredients |> set.to_list)
-
 	let count = lines
 	|> list.map(
 		fn(line: InputLine) {
 			set.intersection(line.ingredients, good_ingredients) |> set.size
 		}
 	) |> utils.sum
-
-	// io.debug("---ingredients---")
-
-	// let m2 = lines
-	// |> make_map_by_ingredient
-	// |> io.debug
 
 	count
 }
@@ -95,147 +89,79 @@ fn get_all_ingredients(lines) -> Set(String) {
 	)
 }
 
-fn compare_lines(lines: List(InputLine), table, compare_fn) -> Map(String, String) {
+fn build_sets(lines) {
 	lines
 	|> list.fold(
-		from: table,
-		with: fn(line1, acc1: Map(String, String)) {
-			lines
-			|> list.fold(
-				from: acc1,
-				with: fn(line2, acc: Map(String, String)) {
-					case line1 == line2 {
-						True -> acc
-						False -> {
-							compare_fn(acc, line1, line2)
-						}
-					}
-				}
-			)
-		}
-	)
-}
-
-fn compare_common(
-		table: Map(String, String),
-		line1: InputLine,
-		line2: InputLine
-	) ->  Map(String, String) {
-
-	// Remove the know ingredients and allergens
-	let line1b = remove(table, line1)
-	let line2b = remove(table, line2)
-
-	// We want only one common allergen
-	// And only one common ingredient
-	let common_ingredients = set.intersection(
-		line1b.ingredients,
-		line2b.ingredients
-		)
-		|> set.to_list
-
-	io.debug("common_ingredients")
-	io.debug(common_ingredients)
-
-	let common_allergens = set.intersection(
-		line1b.allergens,
-		line2b.allergens
-		)
-		|> set.to_list
-
-	io.debug("common_allergens")
-	io.debug(common_allergens)
-
-	case common_ingredients {
-		[ingredient] -> {
-			case common_allergens {
-				[allergen] -> {
-					map.insert(table, ingredient, allergen)
-				}
-				_ -> table
-			}
-		}
-		_ -> table
-	}
-}
-
-fn remove(table: Map(String, String), line: InputLine) -> InputLine {
-	map.fold(
-		over: table,
-		from: line,
-		with: fn(ing: String, all: String, acc: InputLine) {
-			InputLine(
-				ingredients: set.delete(acc.ingredients, ing),
-				allergens: set.delete(acc.allergens, all),
-			)
-		}
-	)
-}
-
-fn check_if_lines_have_one(table: Map(String, String), lines: List(InputLine)) -> Map(String, String) {
-	lines
-	|> list.fold(
-		from: table,
-		with: fn(line, acc) {
-			check_if_lines_has_one(acc, line)
-		}
-	)
-}
-
-fn check_if_lines_has_one(table, line) {
-	let lineb = remove(table, line)
-	// if the line has one ingredient and one allergen then join
-	case lineb.ingredients |> set.to_list {
-		[ingredient] -> {
-			case lineb.allergens |> set.to_list {
-				[allergen] -> {
-					map.insert(table, ingredient, allergen)
-				}
-				_ -> table
-			}
-		}
-		_ -> table
-	}
-}
-
-fn make_map_by_allergen(lines) -> Map(String, Set(String)) {
-	list.fold(
-		over: lines,
 		from: map.new(),
 		with: fn(line: InputLine, acc1) {
-			list.fold(
-				over: line.allergens |> set.to_list(),
+
+			line.allergens
+			|> set.fold(
 				from: acc1,
 				with: fn(allergen, acc) {
 					map.update(acc, allergen, fn(res) {
 						case res {
+							Ok(previous) -> set.intersection(line.ingredients, previous)
 							Error(_) -> line.ingredients
-							Ok(previous) -> set.union(previous, line.ingredients)
-						}
+ 						}
 					})
 				}
 			)
+
 		}
 	)
 }
 
-fn make_map_by_ingredient(lines) -> Map(String, Set(String)) {
-	list.fold(
-		over: lines,
-		from: map.new(),
-		with: fn(line: InputLine, acc1) {
-			list.fold(
-				over: line.ingredients |> set.to_list(),
-				from: acc1,
-				with: fn(ingredient, acc) {
-					map.update(acc, ingredient, fn(res) {
-						case res {
-							Error(_) -> line.allergens
-							Ok(previous) -> set.union(previous, line.allergens)
-						}
-					})
+fn extract_singles(
+		input_table: Map(String, Set(String)),
+		output_table: Map(String, String),
+		failures
+	) {
+
+	case map.size(input_table) {
+		0 -> output_table
+		_ -> {
+			case extract_single(input_table) {
+				Error(_) -> {
+					output_table
 				}
-			)
+				Ok(t) -> {
+					let tuple(all, ing) = t	
+					let next_output_table = map.insert(output_table, all, ing)
+
+					// remove from the input table the ingredients already found
+					let next_input_table = input_table
+						|> map.map_values(fn(k, v) { 
+							set.delete(v, ing)
+						})
+						// remove empty keys
+						|> map.filter(fn(k, v) {
+							set.size(v) > 0
+						})
+
+					extract_singles(next_input_table, next_output_table, 0)
+				}
+			}
+
+
 		}
-	)
+	}
+}
+
+fn extract_single(
+		input_table: Map(String, Set(String))
+	) -> Result(tuple(String, String), String) {
+
+		input_table
+		|> map.to_list
+		|> list.find_map(fn(t) {
+			let tuple(allergen, ingredients) = t
+			case ingredients |> set.to_list {
+				[ing] -> {
+					Ok(tuple(allergen, ing))
+				}
+				_ -> Error("Not here")
+			}
+		})
+		|> utils.replace_error("Not found")
 }

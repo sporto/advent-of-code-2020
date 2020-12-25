@@ -7,7 +7,6 @@ pub fn part1_sample_test() {
 }
 
 pub fn part1_main_test() {
-	// not 2429
 	day21.part1_main()
-	|> should.equal(Ok(5))
+	|> should.equal(Ok(2170))
 }
