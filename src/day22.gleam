@@ -71,12 +71,16 @@ fn part2(file1, file2) {
 	let p1 = Player(1, deck1)
 	let p2 = Player(2, deck2)
 
-	try winner = p2_game(game: 0, players: [p1, p2])
-		|> utils.replace_error("No winner")
+	let res = p2_game(game: 0, players: [p1, p2])
 
-	let winner_score = get_player_score(winner)
-
-	Ok(winner_score)
+	case res {
+		Running(_) -> Error("Running")
+		Halted -> Error("Halted")
+		Done(winner) -> {
+			let winner_score = get_player_score(winner)
+			Ok(winner_score)
+		}
+	}
 }
 
 fn round(round_num: Int, players: List(Player)) -> tuple(Int, List(Player)) {
@@ -136,138 +140,168 @@ fn try_round(players: List(Player)) -> Result(List(Player), Nil) {
 fn p2_game(
 		game game: Int,
 		players players: List(Player)
-	) -> Result(Player, Nil) {
-	let game_num = game + 1
-	let hashes = map.new()
+	) -> Stage {
 
-	io.debug(string.append("=== Game ", int.to_string(game_num)))
-
-	p2_round(
-		game: game_num,
+	let state = State(
+		game: game + 1,
 		round: 0,
-		hashes: hashes,
+		hashes: map.new(),
 		players: players
+	)
+
+	print_game_num(state)
+
+	p2_round(state)
+}
+
+type State{
+	State(
+		game: Int,
+		round: Int,
+		hashes: Map(String, Bool),
+		players: List(Player)
 	)
 }
 
-fn p2_round(
-		game game: Int,
-		round round: Int,
-		hashes previous_hashes,
-		players players: List(Player)
-	) -> Result(Player, Nil) {
-	let round_num = round + 1
+type Stage{
+	Running(State)
+	Halted
+	Done(Player)
+}
 
-	// If a player has no cards, then the other player won
-	case p2_check_end(players) {
-		Ok(player) -> {
-			print_game_winner(player, game)
-			Ok(player)
-		}
-		Error(_) -> {
-			io.debug(string.append("-- Round ", int.to_string(round_num)))
-
-			p2_round_stage1_instant_end(
-				game: game,
-				round: round_num,
-				hashes: previous_hashes,
-				players: players
-			)
-		}
+fn then(state: Stage, fun) {
+	case state {
+		Running(state) -> fun(state)
+		Halted -> state
+		Done(_) -> state
 	}
 }
 
-fn p2_check_end(players) -> Result(Player, String) {
-	let tuple(without_cards, with_cards) = list.partition(players, fn(player: Player) {
+fn p2_round(
+		state: State
+	) -> Stage {
+
+	let next_state = State(
+		..state,
+		round: state.round + 1
+	)
+
+	let stage = Running(next_state)
+	|> then(p2_check_end)
+	|> then(p2_round_stage1_instant_end)
+	|> then(p2_round_stage2)
+
+	case stage {
+		Running(s) -> p2_round(s)
+		Done(winner) -> stage
+		Halted -> Halted
+	}
+}
+
+fn p2_check_end(
+		state: State
+	) -> Stage {
+
+	let tuple(without_cards, with_cards) = state.players
+	|> list.partition(fn(player: Player) {
 		player.deck == []
 	})
 
-	case list.length(with_cards) == list.length(players) {
-		True -> Error("No winner")
-		False -> list.head(with_cards) |> utils.replace_error("Player not found")
+	case list.length(with_cards) == list.length(state.players) {
+		True -> Running(state)
+		False -> {
+			let maybe_winner = list.head(with_cards)
+				|> utils.replace_error("Player not found")
+
+			case maybe_winner {
+				Ok(winner) -> Done(winner)
+				Error(_) -> Halted
+			}
+		}
 	}
 }
 
 fn p2_round_stage1_instant_end(
-		game game: Int,
-		round round: Int,
-		hashes previous_hashes,
-		players players
-	) -> Result(Player, Nil) {
+		state: State
+	) -> Stage {
 
-	let round_hash = get_round_hash(players)
+	let round_hash = get_round_hash(state.players)
 
-	let already_seen = previous_hashes
+	let already_seen = state.hashes
 		|> map.has_key(round_hash)
 
 	case already_seen {
-		True -> end_game_with_player1(players)
+		True -> end_game_with_player1(state)
 		False -> {
-			let next_hashes = map.insert(previous_hashes, round_hash, True)
-			p2_round_stage2(
-				game: game,
-				round: round,
+			let next_hashes = state.hashes
+			|> map.insert(round_hash, True)
+
+			let next_state = State(
+				..state,
 				hashes: next_hashes,
-				players: players
 			)
+
+			Running(next_state)
 		}
 	}
 }
 
-fn end_game_with_player1(players: List(Player)) -> Result(Player, Nil) {
-	players
+fn end_game_with_player1(state) -> Stage {
+	let maybe_winner = state.players
 	|> list.find(fn(p: Player) { p.id == 1})
+
+	case maybe_winner {
+		Ok(winner) -> Done(winner)
+		Error(_) -> Halted
+	}
 }
 
 fn p2_round_stage2(
-		game game: Int,
-		round round: Int,
-		hashes previous_hashes, 
-		players players
-	) {
+		state: State
+	) -> Stage {
 
-	players
+	state.players
 	|> list.map(print_player_deck)
 
-	try moves = players
+	let maybe_moves = state.players
 	|> list.map(take_top_from_player)
 	|> result.all
 
-	moves
-	|> list.map(print_move)
+	case maybe_moves {
+		Error(_) -> Halted
+		Ok(moves) -> {
+			moves
+			|> list.map(print_move)
 
-	let is_recursive = moves
-	|> list.all(fn(move: Move) {
-		list.length(move.remaining_deck) >= move.card
-	})
+			let is_recursive = moves
+			|> list.all(fn(move: Move) {
+				list.length(move.remaining_deck) >= move.card
+			})
 
-	case is_recursive {
-		True -> {
-			p2_round_stage4_recursive(
-					game: game,
-					round: round,
-					hashes: previous_hashes,
-					moves: moves
-				)
-		}
-		False -> {
-			// Winner is the player with the highest value
-			p2_round_stage3_by_highest_value(
-				game: game,
-				round: round,
-				hashes: previous_hashes,
-				moves: moves
-			)
+			case is_recursive {
+				True -> {
+					p2_round_stage4_recursive(
+						state,
+						moves
+					)
+				}
+				False -> {
+					// Winner is the player with the highest value
+					p2_round_stage3_by_highest_value(
+						state,
+						moves
+					)
+				}
+			}
 		}
 	}
+
 }
 
 fn p2_round_stage3_by_highest_value(
-		game game: Int,
-		round round: Int,
-		hashes previous_hashes,
+		state state: State,
 		moves moves: List(Move)
-	) -> Result(Player, Nil) {
+	) -> Stage {
 
 	// Winning card on top
 	// Cards in play, higher on top
@@ -277,48 +311,51 @@ fn p2_round_stage3_by_highest_value(
 	|> list.reverse
 
 	// pick the winner
-	try winner = moves
+	let maybe_winner = moves
 		|> list.sort(fn(a: Move, b: Move) {
 			int.compare(a.card, b.card)
 		})
 		|> list.reverse
 		|> list.head
 
-	print_win(winner, game, round)
+	case maybe_winner {
+		Error(_) -> Halted
+		Ok(winner) -> {
+			print_win(winner, state)
 
-	// Give cards to the winner
-	let players = moves
-	|> list.map(fn(move: Move) {
-		case move.player_id == winner.player_id {
-			True -> {
-				Player(
-					id: move.player_id,
-					deck: list.append(move.remaining_deck, cards_in_play)
-				)
-			}
-			False -> {
-				Player(
-					id: move.player_id,
-					deck: move.remaining_deck,
-				)
-			}
+			// Give cards to the winner
+			let players = moves
+			|> list.map(fn(move: Move) {
+				case move.player_id == winner.player_id {
+					True -> {
+						Player(
+							id: move.player_id,
+							deck: list.append(move.remaining_deck, cards_in_play)
+						)
+					}
+					False -> {
+						Player(
+							id: move.player_id,
+							deck: move.remaining_deck,
+						)
+					}
+				}
+			})
+
+			let next_state = State(
+				..state,
+				players: players,
+			)
+
+			Running(next_state)
 		}
-	})
-
-	p2_round(
-		game: game,
-		round: round,
-		hashes: previous_hashes,
-		players: players
-	)
+	}
 }
 
 fn p2_round_stage4_recursive(
-		game game: Int,
-		round round: Int,
-		hashes previous_hashes,
-		moves moves
-	) {
+		state,
+		moves
+	) -> Stage {
 
 	let players_to_recurse = moves
 		|> list.map(fn(move: Move) {
@@ -330,38 +367,52 @@ fn p2_round_stage4_recursive(
 
 	io.debug("Playing a sub-game to determine the winner...")
 
-	try winner = p2_game(game: game, players: players_to_recurse)
-
-	// Winner card on top
-	let tuple(winner_cards, non_winner_cards) = moves
-		|> list.partition(fn(move: Move) {
-			move.player_id == winner.id
-		})
-
-	let cards_for_winner = list.append(
-		winner_cards |> list.map(fn(move: Move) { move.card }),
-		non_winner_cards |> list.map(fn(move: Move) { move.card })
+	let maybe_winner = p2_game(
+		game: state.game,
+		players: players_to_recurse
 	)
 
-	let players = moves
-	|> list.map(fn(move: Move) {
-		case move.player_id == winner.id {
-			True -> {
-				Player(
-					id: move.player_id,
-					deck: list.append(move.remaining_deck, cards_for_winner)
-				)
-			}
-			False -> {
-				Player(
-					id: move.player_id,
-					deck: move.remaining_deck,
-				)
-			}
-		}
-	})
+	case maybe_winner {
+		Running(_) -> Halted
+		Halted -> Halted
+		Done(winner) -> {
+			// Winner card on top
+			let tuple(winner_cards, non_winner_cards) = moves
+				|> list.partition(fn(move: Move) {
+					move.player_id == winner.id
+				})
 
-	p2_round(game: game, round: round, hashes: previous_hashes, players: players)
+			let cards_for_winner = list.append(
+				winner_cards |> list.map(fn(move: Move) { move.card }),
+				non_winner_cards |> list.map(fn(move: Move) { move.card })
+			)
+
+			let players = moves
+			|> list.map(fn(move: Move) {
+				case move.player_id == winner.id {
+					True -> {
+						Player(
+							id: move.player_id,
+							deck: list.append(move.remaining_deck, cards_for_winner)
+						)
+					}
+					False -> {
+						Player(
+							id: move.player_id,
+							deck: move.remaining_deck,
+						)
+					}
+				}
+			})
+
+			let next_state = State(
+				..state,
+				players: players
+			)
+
+			Running(next_state)
+		}
+	}
 }
 
 fn get_round_hash(players: List(Player)) -> String {
@@ -409,6 +460,12 @@ fn get_player_score(player: Player) -> Int {
 	|> utils.sum
 }
 
+fn print_game_num(state: State) {
+	io.debug(
+		string.append("=== Game ", int.to_string(state.game))
+	)
+}
+
 fn print_player_deck(player: Player) {
 	let message = [
 		"Player ", 
@@ -427,21 +484,21 @@ fn print_move(move: Move) {
 	io.debug(message)
 }
 
-fn print_win(move: Move, game, round) {
+fn print_win(move: Move, state) {
 	let message = [
 		"Player ",
 		int.to_string(move.player_id),
 		" wins round ",
-		int.to_string(round),
+		int.to_string(state.round),
 		" of game ",
-		int.to_string(game),
+		int.to_string(state.game),
 	]
 	|> string.join("")
 
 	io.debug(message)
 }
 
-fn print_game_winner(player, game) {
+fn print_game_winner(player: Player, game) {
 	let message = [
 		"The winner of game ",
 		int.to_string(game),

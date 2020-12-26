@@ -16,7 +16,7 @@ pub fn part2_sample_test() {
 	|> should.equal(Ok(291))
 }
 
-pub fn part2_main_test() {
-	day22.part2_main()
-	|> should.equal(Ok(1))
-}
+// pub fn part2_main_test() {
+// 	day22.part2_main()
+// 	|> should.equal(Ok(1))
+// }
