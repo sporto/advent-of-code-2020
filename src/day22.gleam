@@ -46,6 +46,10 @@ pub fn part2_sample() {
 	part2(sample1, sample2)
 }
 
+pub fn part2_main() {
+	part2(player1, player2)
+}
+
 fn part1(file1, file2) {
 	try deck1 = read(file1)
 	try deck2 = read(file2)
@@ -134,7 +138,7 @@ fn p2_game(
 		players players: List(Player)
 	) -> Result(Player, Nil) {
 	let game_num = game + 1
-	let hashes = []
+	let hashes = map.new()
 
 	io.debug(string.append("=== Game ", int.to_string(game_num)))
 
@@ -191,15 +195,15 @@ fn p2_round_stage1_instant_end(
 		players players
 	) -> Result(Player, Nil) {
 
-	let round_hash = get_game_hash(players)
+	let round_hash = get_round_hash(players)
 
 	let already_seen = previous_hashes
-		|> list.any(fn(h) { h == round_hash })
+		|> map.has_key(round_hash)
 
 	case already_seen {
 		True -> end_game_with_player1(players)
 		False -> {
-			let next_hashes = [round_hash, ..previous_hashes]
+			let next_hashes = map.insert(previous_hashes, round_hash, True)
 			p2_round_stage2(
 				game: game,
 				round: round,
@@ -360,12 +364,12 @@ fn p2_round_stage4_recursive(
 	p2_round(game: game, round: round, hashes: previous_hashes, players: players)
 }
 
-fn get_game_hash(players: List(Player)) -> Map(Int, String) {
+fn get_round_hash(players: List(Player)) -> String {
 	players
 	|> list.map(fn(player: Player) {
-		tuple(player.id, player.deck |> list.map(int.to_string) |> string.join(","))
+		player.deck |> list.map(int.to_string) |> string.join(",")
 	})
-	|> map.from_list
+	|> string.join("|")
 }
 
 fn take_top_from_player(player: Player) {
