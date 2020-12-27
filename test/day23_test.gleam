@@ -18,3 +18,8 @@ pub fn part1_main_test() {
 	day23.part1(100, input)
 	|> should.equal(Ok("52937846"))
 }
+
+pub fn part2_sample_test() {
+	day23.part2(sample)
+	|> should.equal(Ok(149245887792))
+}

@@ -15,7 +15,7 @@ pub fn part1(max_moves: Int, input) {
 		cups: cups
 	)
 
-	print_final(final)
+	// print_final(final)
 
 	try rolled = final
 		|> rolling.from_list
@@ -28,6 +28,35 @@ pub fn part1(max_moves: Int, input) {
 		|> string.join("")
 
 	Ok(res)
+}
+
+pub fn part2(input) -> Result(Int, Nil) {
+	let one_million = 1_000_000
+	let max_moves = 10_000_000
+	let max = utils.max(input)
+	let filler = list.range(max + 1, one_million + 1)
+
+	let cups = list.append(input, filler)
+		|> rolling.from_list
+
+	try final = p1_move_or_stop(
+		max_moves: max_moves,
+		previous_move: 0,
+		cups: cups
+	)
+
+	// print_final(final)
+
+	try rolled = final
+		|> rolling.from_list
+		|> roll_until_num_is_first(_, 1)
+
+	let rolled_list = rolling.to_list(rolled)
+
+	try a = rolled_list |> list.head
+	try b = rolled_list |> list.drop(1) |> list.head
+
+	Ok(a * b)
 }
 
 fn p1_move_or_stop(
@@ -48,7 +77,7 @@ fn p1_move_or_stop(
 }
 
 fn p1_move(input: Rolling(Int)) -> Result(Rolling(Int), Nil) {
-	print_cups(input |> rolling.to_list)
+	// print_cups(input |> rolling.to_list)
 
 	let all_cups = rolling.to_list(input)
 	try current_cup = rolling.current(input)
@@ -57,7 +86,7 @@ fn p1_move(input: Rolling(Int)) -> Result(Rolling(Int), Nil) {
 	let picked_cups = all_cups |> list.take(4) |> list.drop(1)
 	let remaining = [current_cup, ..list.drop(all_cups, 4)]
 
-	print_picked(picked_cups)
+	// print_picked(picked_cups)
 
 	let destination_cup = find_destination_cup(
 		all_cups: all_cups,
@@ -65,7 +94,7 @@ fn p1_move(input: Rolling(Int)) -> Result(Rolling(Int), Nil) {
 		picked_cups: picked_cups,
 	)
 
-	print_destination(destination_cup)
+	// print_destination(destination_cup)
 
 	// This returns with the destination as first
 	try placed = place_cups(
