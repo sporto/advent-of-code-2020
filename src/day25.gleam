@@ -1,8 +1,6 @@
 import utils
 import gleam/io
 
-// const subject_number = 7
-
 // Find loop size from public key
 pub fn get_loop_size(public_key: Int) -> Int {
 	find_loop_size(1, 7, public_key)
@@ -48,4 +46,9 @@ pub fn get_encryption_key(subject_number: Int, loop_size loop_size: Int) {
 		value: subject_number,
 		loops_to_go: loop_size
 	)
+}
+
+pub fn part1(card_public_key, door_public_key) {
+	let card_loop_size = get_loop_size(card_public_key)
+	get_encryption_key(door_public_key, card_loop_size)
 }

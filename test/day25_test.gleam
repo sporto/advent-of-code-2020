@@ -17,9 +17,19 @@ pub fn loop_size_test() {
 pub fn get_encryption_key_test() {
 	let encryption_key = 14897079
 
-	// day25.get_encryption_key(sample_door_public_key, loop_size: 8)
-	// |> should.equal(encryption_key)
+	day25.get_encryption_key(sample_door_public_key, loop_size: 8)
+	|> should.equal(encryption_key)
 
 	day25.get_encryption_key(sample_card_public_key, loop_size: 11)
 	|> should.equal(encryption_key)
+}
+
+pub fn part1_sample_test() {
+	day25.part1(sample_card_public_key, sample_door_public_key)
+	|> should.equal(14897079)
+}
+
+pub fn part1_test() {
+	day25.part1(card_public_key, door_public_key)
+	|> should.equal(18862163)
 }
