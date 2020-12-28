@@ -1,7 +1,9 @@
-import day24.{Coor, E, SE, SW, W, NW, NE}
+import day24.{Acc, Coor, E, SE, SW, W, NW, NE, White, Black}
 import gleam/should
+import gleam/map
 
 const sample = "data/24/sample.txt"
+const input = "data/24/input.txt"
 
 pub fn move_test() {
 	let init = Coor(1,1)
@@ -41,7 +43,42 @@ pub fn walk_test() {
 	|> should.equal(Coor(1,0))
 }
 
-pub fn part1_sample_10_test() {
+pub fn follow_instructions_test() {
+	[
+		[E, SE, W]
+	] |> day24.follow_instructions(
+		Acc(Coor(0,0), map.new())
+	)
+	|> should.equal(
+		Acc(
+			Coor(0,1),
+			[tuple(Coor(0,1), Black)] |> map.from_list
+		)
+	)
+
+	[
+		[E, SE, W],
+		[NW,W,SW,E,E]
+	] |> day24.follow_instructions(
+		Acc(Coor(0,0), map.new())
+	)
+	|> should.equal(
+		Acc(
+			Coor(0,0),
+			[
+				tuple(Coor(0,1), Black),
+				tuple(Coor(0,0), Black)
+			] |> map.from_list
+		)
+	)
+}
+
+pub fn part1_sample_test() {
 	day24.part1(sample)
-	|> should.equal(Ok(1))
+	|> should.equal(Ok(10))
+}
+
+pub fn part1_test() {
+	day24.part1(input)
+	|> should.equal(Ok(10))
 }

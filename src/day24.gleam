@@ -23,6 +23,10 @@ pub type Color{
 	Black
 }
 
+fn is_black(col: Color) {
+	col == Black
+}
+
 fn read(file: String) {
 	utils.get_input_lines(file, parse_line)
 }
@@ -53,7 +57,7 @@ fn parse_char(c: String) {
 	}
 }
 
-type Acc{
+pub type Acc{
 	Acc(
 		coor: Coor,
 		grid: Map(Coor, Color)
@@ -68,23 +72,31 @@ pub fn part1(file) {
 		map.new()
 	)
 
-	let grid = follow_instructions(instructions, initial)
-	|> io.debug
+	let acc = follow_instructions(instructions, initial)
 
-	Ok(0)
+	let blacks = acc.grid
+		|> map.values
+		|> list.filter(is_black)
+		|> list.length
+
+	Ok(blacks)
 }
 
-fn follow_instructions(instructions: List(List(Dir)), acc: Acc) -> Acc {
+pub fn follow_instructions(
+		instructions: List(List(Dir)),
+		acc: Acc
+	) -> Acc {
+
+	// reference tile doesn't change
+
 	instructions
 	|> list.fold(
 		from: acc,
 		with: fn(line, acc: Acc) {
-			let next_coor  = walk(acc.coor, line)
-			let next_grid = flip_tile(next_coor, acc.grid)
-			Acc(
-				next_coor,
-				next_grid
-			)
+			let coor  = walk(acc.coor, line)
+			let next_grid = flip_tile(coor, acc.grid)
+
+			Acc(..acc, grid: next_grid)
 		}
 	)
 }
