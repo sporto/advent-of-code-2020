@@ -103,18 +103,18 @@ pub fn transform_tile_test() {
 
 pub fn grow_test() {
 	let grid = [
-		tuple(Coor(1,1), White)
+		tuple(Coor(1,1), Black)
 	] |> map.from_list
 
 	let expected = [
-		tuple(Coor(1,1), White),
+		tuple(Coor(1,1), Black),
 
-		tuple(Coor(1,0), Black),
-		tuple(Coor(2,0), Black),
-		tuple(Coor(2,1), Black),
-		tuple(Coor(1,2), Black),
-		tuple(Coor(0,2), Black),
-		tuple(Coor(0,1), Black),
+		tuple(Coor(1,0), White),
+		tuple(Coor(2,0), White),
+		tuple(Coor(2,1), White),
+		tuple(Coor(1,2), White),
+		tuple(Coor(0,2), White),
+		tuple(Coor(0,1), White),
 	] |> map.from_list
 
 	day24.grow(grid)
@@ -133,5 +133,5 @@ pub fn part1_test() {
 
 pub fn part2_sample_test() {
 	day24.part2(day24.sample)
-	|> should.equal(Ok(100))
+	|> should.equal(Ok(2208))
 }

@@ -29,6 +29,8 @@ pub type Color{
 
 pub type Grid = Map(Coor, Color)
 
+const start_side = White
+
 fn is_black(col: Color) {
 	col == Black
 }
@@ -88,6 +90,10 @@ pub fn part1(file) {
 //  day24:part2_sample().
 pub fn part2_sample() {
 	part2(sample)
+}
+
+pub fn part2_main() {
+	part2(input)
 }
 
 pub fn part2(file) {
@@ -156,7 +162,7 @@ pub fn move(dir: Dir, coor: Coor) -> Coor {
 fn flip_tile(coor: Coor, grid) {
 	map.update(grid, coor, fn(res) {
 		case res {
-			Error(_) -> Black
+			Error(_) -> flip(start_side)
 			Ok(current)  -> {
 				flip(current)
 			}
@@ -164,7 +170,7 @@ fn flip_tile(coor: Coor, grid) {
 	})
 }
 
-const max_days = 1
+const max_days = 100
 
 fn transform(grid: Grid, day: Int) {
 	print_day(day)
@@ -233,7 +239,7 @@ pub fn grow(grid: Grid) -> Grid {
 				with: fn(adj_coor, acc) {
 					map.update(acc, adj_coor, fn(res) {
 						case res {
-							Error(_) -> Black
+							Error(_) -> start_side
 							Ok(current) -> current
 						}
 					})
@@ -261,7 +267,7 @@ fn get_adjacent_coors(coor: Coor) -> List(Coor) {
 
 fn get_tile(grid: Grid, coor: Coor) -> Color {
 	map.get(grid, coor)
-	|> result.unwrap(Black)
+	|> result.unwrap(start_side)
 }
 
 fn print_day(day) {
